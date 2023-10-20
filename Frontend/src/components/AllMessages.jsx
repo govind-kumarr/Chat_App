@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { BiCheck, BiCheckDouble } from "react-icons/bi";
 
 const AllMessages = ({ makeMessageSeen }) => {
+  let isThereMessage = false;
   const { myInfo } = useSelector((state) => state.auth);
   const { activeUser, messages, isTyping } = useSelector(
     (state) => state.messanger
@@ -13,6 +14,7 @@ const AllMessages = ({ makeMessageSeen }) => {
   }
 
   console.log("messages", messages);
+  console.log(isThereMessage);
 
   return (
     <div className="flex-grow w-full h-5/6 px-4 pt-2">
@@ -20,7 +22,9 @@ const AllMessages = ({ makeMessageSeen }) => {
         {messages.length > 0 &&
           messages.map((message) => {
             makeMessageSeen(message);
-            return isCurrentUser(message) ? (
+            const condition = isCurrentUser(message);
+            if (condition) isThereMessage = true;
+            return condition ? (
               <div
                 key={message.messageId}
                 className={` px-2 py-1 ${
@@ -46,6 +50,13 @@ const AllMessages = ({ makeMessageSeen }) => {
               </div>
             ) : null;
           })}
+        {!isThereMessage && (
+          <div className="w-full h-full flex justify-center items-center">
+            <p className="border-2 rounded-lg border-white px-4 py-2 text-white font-bold">
+              No messages to show
+            </p>
+          </div>
+        )}
         {isTyping && (
           <div key={"TypingIndicator"} className={`h-10 inline-block`}>
             <img

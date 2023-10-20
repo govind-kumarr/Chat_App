@@ -1,28 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { BiSolidSend } from "react-icons/bi";
+import { AiOutlineFileText } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
-import { addNewMessage } from "../store/messanger/messanger";
+import { axios } from "./../config/axiosConfig.js";
 
 const TypingBox = ({ addMessage, sendTypingIndication, stoppedTyping }) => {
   const [text, setText] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const { myInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const fileRef = useRef(null);
 
   const handleTextChange = (e) => {
     setText(e.target.value);
   };
   const handleSubmit = () => {
-    //Send Message to reciever
-    addMessage({ content: text, sender: myInfo.id });
-    setText("");
+    if (text) {
+      //Send Message to reciever
+      addMessage({ content: text, sender: myInfo.id });
+      setText("");
+    }
+    if (selectedFile) {
+      handleUpload();
+    }
   };
-  
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSubmit();
       e.preventDefault();
     }
   };
+
+  function handleFileChange(e) {
+    setSelectedFile(e.target.files[0]);
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) return;
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    const uploadResponse = await axios.post("/api/file/upload", formData);
+    console.log(uploadResponse);
+  }
+
+  useEffect(() => {
+    console.log(fileRef);
+  }, []);
+
   return (
     <div className="flex-none h-1/6 w-full self-end flex items-center space-x-4 justify-center border-t-2">
       <textarea
@@ -34,10 +61,27 @@ const TypingBox = ({ addMessage, sendTypingIndication, stoppedTyping }) => {
         onFocus={sendTypingIndication}
         onBlur={stoppedTyping}
       ></textarea>
-      <div>
-        {/* Send Icon  */}
-        <div onClick={handleSubmit}>
-          <BiSolidSend className="text-white text-3xl" />
+      <div className="h-full">
+        <div className="h-full flex flex-col justify-center gap-4">
+          {/* Send Icon  */}
+          <div onClick={handleSubmit} className="cursor-pointer">
+            <BiSolidSend className="text-white text-3xl" />
+          </div>
+          {/* file send icon */}
+          <input
+            type="file"
+            name=""
+            id=""
+            className="hidden"
+            ref={fileRef}
+            onChange={handleFileChange}
+          />
+          <div
+            className="cursor-pointer"
+            onClick={() => fileRef?.current?.click()}
+          >
+            <AiOutlineFileText className="text-white text-3xl" />
+          </div>
         </div>
       </div>
     </div>

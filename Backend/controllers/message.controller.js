@@ -40,8 +40,10 @@ const saveMessageCont = async (req, res) => {
 
 const getAllMessages = async (req, res) => {
   try {
-    console.log({ headers: req.headers });
-    const messages = await MessageModel.find({}).sort("-createdAt");
+    const user = req.user;
+    const messages = await MessageModel.find({
+      $or: [{ sender: user.id }, { receiver: user.id }],
+    }).sort("-createdAt");
     res.send(messages);
   } catch (error) {
     console.log(error);

@@ -22,6 +22,23 @@ const getAvatar = async (req, res) => {
   }
 };
 
+const uploadFile = async (req, res) => {
+  try {
+    req.on("data", (chunk) => {
+      console.log(chunk);
+    });
+    req.on("end", () => {
+      console.log("Complete file received");
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.send({
+      error,
+    });
+  }
+};
+
 module.exports = {
   getAvatar,
+  uploadFile,
 };

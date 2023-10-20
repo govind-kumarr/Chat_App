@@ -42,7 +42,7 @@ const Messanger = () => {
   };
 
   const initializeSocket = async () => {
-    socketRef.current = io("ws://localhost:8080");
+    socketRef.current = io("http://localhost:3030");
     const socket = socketRef.current;
     socket.on("connect", () => {
       // console.log(socket.id + " connected");
@@ -110,7 +110,7 @@ const Messanger = () => {
       status: "sent",
     };
     dispatch(addNewMessage(newMessage));
-    dispatch(saveMessageToDB({...newMessage}));
+    dispatch(saveMessageToDB({ ...newMessage }));
     socket.emit("sendMessage", newMessage);
   };
 
@@ -133,8 +133,8 @@ const Messanger = () => {
   };
 
   useEffect(() => {
-    dispatch(getMessagesFromDB())
-  },[])
+    dispatch(getMessagesFromDB());
+  }, []);
 
   useEffect(() => {
     initializeSocket();
@@ -201,12 +201,20 @@ const Messanger = () => {
       </div>
       {/* Messages  */}
       <div className="w-3/5 h-full border-2">
-        <Messages
-          addMessage={addMessage}
-          makeMessageSeen={makeMessageSeen}
-          sendTypingIndication={sendTypingIndication}
-          stoppedTyping={stoppedTyping}
-        />
+        {activeUser ? (
+          <Messages
+            addMessage={addMessage}
+            makeMessageSeen={makeMessageSeen}
+            sendTypingIndication={sendTypingIndication}
+            stoppedTyping={stoppedTyping}
+          />
+        ) : (
+          <div className="w-full h-full flex justify-center items-center">
+            <p className="border-2 rounded-lg border-white px-4 py-2 text-white font-bold hover:bg-white hover:text-[#0a0e1585] hover:cursor-pointer">
+              Select a friend to chat
+            </p>
+          </div>
+        )}
       </div>
       {/* Gallery  */}
       <div className="w-1/5 h-full border-2 p-2">

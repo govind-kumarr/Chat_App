@@ -7,7 +7,7 @@
     "dev": "nodemon index",
     "client": "cd .. && cd Frontend && npm run dev",
     "start": "concurrently \"node index\" \"npm run client\" \"node socket\"",
-    "app": "concurrently \"npm run dev\" \"npm run client\" \"nodemon socket\""
+    "app": "concurrently \"npm run dev\" \"npm run client\""
   },
   "keywords": [],
   "author": "",
