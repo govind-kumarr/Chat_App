@@ -3,12 +3,19 @@ import { BiSolidSend } from "react-icons/bi";
 import { AiOutlineFileText } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { axios } from "./../config/axiosConfig.js";
+import { getUniqueId } from "../utils/utils.js";
 
-const TypingBox = ({ addMessage, sendTypingIndication, stoppedTyping }) => {
+const TypingBox = ({
+  addMessage,
+  sendTypingIndication,
+  stoppedTyping,
+  setNewFile,
+  selectedFile,
+  setSelectedFile,
+}) => {
   const [text, setText] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
   const { myInfo } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
+  const { activeUser } = useSelector((state) => state.messanger);
   const fileRef = useRef(null);
 
   const handleTextChange = (e) => {
@@ -41,6 +48,14 @@ const TypingBox = ({ addMessage, sendTypingIndication, stoppedTyping }) => {
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append(
+      "messageData",
+      JSON.stringify({
+        sender: myInfo.id,
+        receiver: activeUser,
+        messageId: getUniqueId(),
+      })
+    );
 
     const uploadResponse = await axios.post("/api/file/upload", formData);
     console.log(uploadResponse);

@@ -1,8 +1,10 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { BiCheck, BiCheckDouble } from "react-icons/bi";
+import FileCard from "./FileCard";
 
-const AllMessages = ({ makeMessageSeen }) => {
+const AllMessages = ({ makeMessageSeen, newFile, setNewFile }) => {
+  console.log({ newFile });
   let isThereMessage = false;
   const { myInfo } = useSelector((state) => state.auth);
   const { activeUser, messages, isTyping } = useSelector(
@@ -35,7 +37,12 @@ const AllMessages = ({ makeMessageSeen }) => {
                     : "self-start text-[#0a0e1585] bg-white font-bold"
                 }`}
               >
-                <p className="pr-2">{message.content}</p>
+                {typeof message.content === "object" ? (
+                  <FileCard fileData={message.content} />
+                ) : (
+                  <p className="pr-2">{message.content}</p>
+                )}
+
                 {message.sender == myInfo.id && (
                   <div className="h-3 w-3 rounded-full">
                     {message.status === "sent" ? (
@@ -50,6 +57,19 @@ const AllMessages = ({ makeMessageSeen }) => {
               </div>
             ) : null;
           })}
+        {/* Sending New File  */}
+        {newFile && (
+          <div
+            key={"message.messageId"}
+            className={` px-2 py-1 pb-2 self-end text-white bg-[#0a0e1585] rounded-lg relative flex flex-col items-end`}
+          >
+            <FileCard
+              fileData={{ fileName: newFile?.name }}
+              currentFile={newFile?.name ? true : false}
+              setNewFile={setNewFile}
+            />
+          </div>
+        )}
         {!isThereMessage && (
           <div className="w-full h-full flex justify-center items-center">
             <p className="border-2 rounded-lg border-white px-4 py-2 text-white font-bold">

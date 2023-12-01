@@ -1,4 +1,5 @@
-const { S3Client } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const fs = require("fs");
 require("dotenv").config();
 
 const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -22,7 +23,20 @@ const initializeS3 = () => {
   }
 };
 
+const uploadObject = async (filePath, fileKey) => {
+  const readStream = fs.createReadStream(filePath);
+  const client = initializeS3();
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: fileKey,
+    Body: readStream
+  });
+  const response = await client.send(command);
+  console.log(response);
+};
+
 module.exports = {
   initializeS3,
   bucket,
+  uploadObject,
 };

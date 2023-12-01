@@ -34,18 +34,18 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", (data) => {
     if (data && "userId" in data) addUser(data.userId, socket.id);
-    console.log(users);
+    // console.log(users);
     io.emit("activeUsers", users);
   });
 
   socket.on("sendMessage", (data) => {
-    console.log(data);
+    // console.log(data);
     socket.to(data?.socketId).emit("getMessage", data);
   });
 
   socket.on("messageDelivered", (data) => {
-    console.log("Message Delivered: ");
-    console.log(data);
+    // console.log("Message Delivered: ");
+    // console.log(data);
     socket.to(data?.senderSocketId).emit("messageSent", data);
   });
 
@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
 
   socket.on("logout", (data) => {
     if (data && "userId" in data) removeUser(data.userId);
-    console.log(users);
+    // console.log(users);
   });
 
   // ON Client Disconnect

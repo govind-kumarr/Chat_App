@@ -2,9 +2,10 @@ const { formidable } = require("formidable");
 const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
-const { Upload, } = require("@aws-sdk/lib-storage");
+const { Upload } = require("@aws-sdk/lib-storage");
 const { RegisterModel } = require("../models/Register.model");
 const { initializeS3, bucket } = require("../aws/s3");
+const { store } = require("..");
 require("dotenv").config();
 
 const port = process.env.PORT || 3030;
@@ -128,8 +129,6 @@ const userLogin = async (req, res) => {
       );
 
     let { email, password } = fields;
-    email = email[0];
-    password = password[0];
     let errors = [];
     if (!email) errors.push("Please enter a valid email");
     if (!password) errors.push("Please enter a valid password");
@@ -151,6 +150,14 @@ const userLogin = async (req, res) => {
     if (doesExist.password === password) {
       //JWT SECRET
       const secret = process.env.SECRET;
+
+      req.session.user = {
+        id: doesExist._id,
+        email: doesExist.email,
+        username: doesExist.username,
+        image: doesExist.image,
+        registerTime: doesExist.createdAt,
+      };
 
       const token = jwt.sign(
         {
@@ -177,7 +184,21 @@ const userLogin = async (req, res) => {
   });
 };
 
+const userLogout = async (req, res) => {
+  console.log(req.session.user_id);
+  console.log(
+    store.all((err, sessions) => {
+      if (err) console.log(err);
+      else console.log(sessions);
+    })
+  );
+  // store.destroy()
+  // req.session.destroy();
+  res.send("Successfully logged out");
+};
+
 module.exports = {
   userRegister,
   userLogin,
+  userLogout,
 };

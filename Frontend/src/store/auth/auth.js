@@ -40,6 +40,16 @@ const loginUser = createAsyncThunk("auth/loginUser", async (credentials) => {
   }
 });
 
+const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
+  try {
+    const res = await axios.post("/api/auth/logout");
+    console.log(res.data);
+  } catch (error) {
+    console.log("Error while registering");
+    return error;
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState: authState,
@@ -90,12 +100,28 @@ const authSlice = createSlice({
         state.error = message;
         state.authenticate = false;
         state.myInfo = "";
+      })
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+        state.error = "";
+      })
+      .addCase(logoutUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = "";
+        state.authenticate = false;
+        state.successMessage = "Successfully logged out";
+        state.myInfo = null;
+        toast(state.successMessage);
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        state.loading = false;
+        state.error = true;
       });
   },
 });
 
 export const {} = authSlice.actions;
 
-export { registerUser, loginUser };
+export { registerUser, loginUser, logoutUser };
 
 export default authSlice.reducer;

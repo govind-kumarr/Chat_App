@@ -8,13 +8,21 @@ const Messages = ({
   sendTypingIndication,
   stoppedTyping,
 }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+
   return (
     <div className="w-full h-full flex flex-col">
-      <AllMessages makeMessageSeen={makeMessageSeen} />
+      <AllMessages
+        makeMessageSeen={makeMessageSeen}
+        newFile={selectedFile}
+        setNewFile={setSelectedFile}
+      />
       <TypingBox
         addMessage={addMessage}
         sendTypingIndication={sendTypingIndication}
         stoppedTyping={stoppedTyping}
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
       />
     </div>
   );

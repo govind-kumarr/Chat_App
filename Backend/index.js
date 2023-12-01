@@ -3,11 +3,37 @@ const express = require("express");
 const app = express();
 const { createServer } = require("http");
 const server = createServer(app);
+const session = require("express-session");
 const { Server } = require("socket.io");
+const MongoStore = require("connect-mongo");
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+const MONGO_URL = process.env.MONGO_URL;
+const SECRET = process.env.SECRET;
 
 app.use(
   cors({
     origin: "*",
+  })
+);
+
+const store = MongoStore.create({
+  client: mongoose.connect(MONGO_URL),
+  mongoUrl: MONGO_URL,
+  dbName: "messangerApp",
+});
+
+app.use(
+  session({
+    key: "user_sid",
+    secret: SECRET,
+    resave: false,
+    saveUninitialized: true,
+    store,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 12,
+    },
   })
 );
 
@@ -27,10 +53,20 @@ app.use(express.json());
 
 const port = process.env.PORT || 3030;
 
+const validateSession = async (req, res, next) => {
+  console.log(
+    store.all((err, sessions) => {
+      if (err) console.log(err);
+      else console.log(sessions);
+    })
+  );
+  next();
+};
+
 app.use("/api/auth", authRouter);
-app.use("/api/friends", friendsRouter);
-app.use("/api/file", fileRouter);
-app.use("/api/chat", messageRouter);
+app.use("/api/friends", validateSession, friendsRouter);
+app.use("/api/file", validateSession, fileRouter);
+app.use("/api/chat", validateSession, messageRouter);
 
 app.get("/", (req, res) => {
   res.send(`App is running on port ${port}`);
@@ -56,18 +92,18 @@ io.on("connection", (socket) => {
 
   socket.on("addUser", (data) => {
     if (data && "userId" in data) addUser(data.userId, socket.id);
-    console.log(users);
+    // console.log(users);
     io.emit("activeUsers", users);
   });
 
   socket.on("sendMessage", (data) => {
-    console.log(data);
+    // console.log(data);
     socket.to(data?.socketId).emit("getMessage", data);
   });
 
   socket.on("messageDelivered", (data) => {
-    console.log("Message Delivered: ");
-    console.log(data);
+    // console.log("Message Delivered: ");
+    // console.log(data);
     socket.to(data?.senderSocketId).emit("messageSent", data);
   });
 
@@ -85,7 +121,7 @@ io.on("connection", (socket) => {
 
   socket.on("logout", (data) => {
     if (data && "userId" in data) removeUser(data.userId);
-    console.log(users);
+    // console.log(users);
   });
 
   // ON Client Disconnect
@@ -105,3 +141,7 @@ const startServer = () =>
   });
 
 connectToDb(startServer);
+
+module.exports = {
+  store,
+};

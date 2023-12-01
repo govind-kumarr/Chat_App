@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { FileModal } = require("./File.modal");
 
 const messageSchema = mongoose.Schema({
   messageId: {
@@ -15,7 +16,7 @@ const messageSchema = mongoose.Schema({
     required: true,
   },
   content: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: true,
   },
   socketId: {
@@ -33,6 +34,10 @@ const messageSchema = mongoose.Schema({
     default: Date.now(),
   },
 });
+
+messageSchema.path("content").validate(function (value) {
+  return typeof value === "string" || value instanceof FileModal;
+}, "Content must be a string or a FileModal instance");
 
 const MessageModel = mongoose.model("messages", messageSchema);
 
