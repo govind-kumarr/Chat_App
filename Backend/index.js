@@ -3,43 +3,21 @@ const express = require("express");
 const app = express();
 const { createServer } = require("http");
 const server = createServer(app);
-const session = require("express-session");
 const { Server } = require("socket.io");
-const MongoStore = require("connect-mongo");
-const mongoose = require("mongoose");
+const { verifyJwt } = require("./utils/jwt.utils");
 require("dotenv").config();
-
-const MONGO_URL = process.env.MONGO_URL;
-const SECRET = process.env.SECRET;
 
 app.use(
   cors({
-    origin: "*",
-  })
-);
-
-const store = MongoStore.create({
-  client: mongoose.connect(MONGO_URL),
-  mongoUrl: MONGO_URL,
-  dbName: "messangerApp",
-});
-
-app.use(
-  session({
-    key: "user_sid",
-    secret: SECRET,
-    resave: false,
-    saveUninitialized: true,
-    store,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 12,
-    },
+    origin: "http://127.0.0.1:5173",
+    credentials: true,
   })
 );
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://127.0.0.1:5173",
+    credentials: true,
   },
 });
 
@@ -48,25 +26,38 @@ const friendsRouter = require("./routes/friends.routes");
 const fileRouter = require("./routes/file.routes");
 const messageRouter = require("./routes/message.routes");
 const { connectToDb } = require("./db/db");
+const cookieParser = require("cookie-parser");
+const { requireUser } = require("./middlewares/auth.middleware");
 
+app.use(cookieParser());
 app.use(express.json());
 
 const port = process.env.PORT || 3030;
 
 const validateSession = async (req, res, next) => {
-  console.log(
-    store.all((err, sessions) => {
-      if (err) console.log(err);
-      else console.log(sessions);
-    })
-  );
-  next();
+  const accessToken = req.cookies.accessToken;
+  if (accessToken) {
+    const { decoded, valid } = verifyJwt(accessToken);
+    if (decoded && valid) {
+      console.log({ decoded });
+      req.locals = {
+        user: false,
+      };
+      req.locals.user = decoded;
+    }
+    return next();
+  } else {
+    console.log("token not present");
+    return next();
+  }
 };
 
+app.use(validateSession);
+
 app.use("/api/auth", authRouter);
-app.use("/api/friends", validateSession, friendsRouter);
-app.use("/api/file", validateSession, fileRouter);
-app.use("/api/chat", validateSession, messageRouter);
+app.use("/api/friends", requireUser, friendsRouter);
+app.use("/api/file", requireUser, fileRouter);
+app.use("/api/chat", requireUser, messageRouter);
 
 app.get("/", (req, res) => {
   res.send(`App is running on port ${port}`);
@@ -142,6 +133,4 @@ const startServer = () =>
 
 connectToDb(startServer);
 
-module.exports = {
-  store,
-};
+module.exports;

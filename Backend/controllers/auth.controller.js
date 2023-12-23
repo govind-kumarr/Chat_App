@@ -5,10 +5,15 @@ const jwt = require("jsonwebtoken");
 const { Upload } = require("@aws-sdk/lib-storage");
 const { RegisterModel } = require("../models/Register.model");
 const { initializeS3, bucket } = require("../aws/s3");
+const axios = require("axios");
+const qs = require("qs");
 const { store } = require("..");
+const { updateElseInsertUser } = require("../services/user.services");
+const { createSession } = require("../services/session.services");
+const { signJwt } = require("../utils/jwt.utils");
 require("dotenv").config();
 
-const port = process.env.PORT || 3030;
+const app_url = process.env.APP_URL;
 
 const userRegister = async (req, res) => {
   const form = formidable();
@@ -197,8 +202,110 @@ const userLogout = async (req, res) => {
   res.send("Successfully logged out");
 };
 
+async function getGoogleOAuthTokens({ code }) {
+  const url = "https://oauth2.googleapis.com/token";
+
+  const client_id = process.env.GOOGLE_CLIENT_ID;
+  const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+
+  const values = {
+    code,
+    client_id,
+    client_secret,
+    redirect_uri,
+    grant_type: "authorization_code",
+  };
+
+  try {
+    const res = await axios.post(url, qs.stringify(values), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw new Error(error.message);
+  }
+}
+
+async function getGoogleUser({ id_token, access_token }) {
+  try {
+    const res = await axios.get(
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`,
+      {
+        headers: {
+          Authorization: `Bearer ${id_token}`,
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error.response.data);
+    throw new Error(error.message);
+  }
+}
+
+const accessTokenCookieOptions = {
+  maxAge: 900000, // 15 mins
+  httpOnly: true,
+  domain: "localhost",
+  path: "/",
+  sameSite: "lax",
+  secure: false,
+};
+
+const googleAuthHandler = async (req, res) => {
+  const code = req.query.code;
+  // get id_token and access_token
+  const { id_token, access_token } = await getGoogleOAuthTokens({ code });
+  // Retrieve user from id_token and access_token
+  const googleUser = await getGoogleUser({ id_token, access_token });
+
+  if (!googleUser.verified_email)
+    res.status(401).send("Email is not verified!");
+
+  const newUser = {
+    username: googleUser.name,
+    email: googleUser.email,
+    password: "nasjkndfa;slknv;zdj fnvkjz",
+    image: googleUser.picture,
+    avatarUrl: googleUser.picture,
+  };
+  // Upsert the user in database
+  let insertedUser = await updateElseInsertUser(
+    { email: newUser.email },
+    newUser
+  );
+  const session = await createSession(insertedUser._id);
+
+  const accessToken = signJwt(
+    {
+      email: googleUser.email,
+      username: googleUser.name,
+      picture: googleUser.picture,
+      session: session._id,
+    },
+    { expiresIn: 900 }
+  );
+
+  // set cookies
+  res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+  // redirect back to client
+  res.redirect(app_url);
+};
+
+const verifyUser = async (req, res) => {
+  return res.json({
+    authenticated: true,
+  });
+};
+
 module.exports = {
   userRegister,
   userLogin,
   userLogout,
+  googleAuthHandler,
+  verifyUser,
 };

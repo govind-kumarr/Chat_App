@@ -8,5 +8,6 @@ export const saveToken = (token) => {
 export const retrieveToken = () => localStorage.getItem("access_token");
 
 axios.defaults.baseURL = "http://localhost:3030";
+axios.defaults.withCredentials = true;
 
 export { axios };

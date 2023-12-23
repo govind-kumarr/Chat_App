@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../store/auth/auth";
+import { loginUser, validateSession } from "../store/auth/auth";
 import { ToastContainer, toast } from "react-toastify";
+import { getGoogleOAuthURL } from "../utils/utils";
 
 const initialState = {
   email: "",
@@ -50,6 +51,9 @@ const Login = () => {
       [e.target.name]: e.target.value,
     });
   };
+  useEffect(() => {
+    dispatch(validateSession());
+  }, []);
 
   return (
     <div className="register">
@@ -91,6 +95,11 @@ const Login = () => {
                 <span className="capitalize text-blue-800">
                   <Link to={"/messanger/register"}>Register here</Link>
                 </span>
+              </div>
+            </div>
+            <div className="form-group">
+              <div>
+                <a href={getGoogleOAuthURL()}>Login with google</a>
               </div>
             </div>
           </form>

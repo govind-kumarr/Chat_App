@@ -16,6 +16,15 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+const requireUser = (req, res, next) => {
+  const user = req?.locals?.user;
+  if (!user) {
+    return res.sendStatus(403);
+  }
+  return next();
+};
+
 module.exports = {
-  verifyToken
-}
+  verifyToken,
+  requireUser,
+};

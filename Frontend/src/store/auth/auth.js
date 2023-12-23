@@ -50,6 +50,16 @@ const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
   }
 });
 
+const validateSession = createAsyncThunk("auth/validateSession", async () => {
+  try {
+    const res = await axios.get("/api/auth/verify-session");
+    console.log(res);
+    return res.data;
+  } catch (error) {
+    return error;
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState: authState,
@@ -116,12 +126,18 @@ const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state) => {
         state.loading = false;
         state.error = true;
+      })
+      .addCase(validateSession.fulfilled, (state, action) => {
+        console.log(action.payload);
+      })
+      .addCase(validateSession.rejected, (state, action) => {
+        console.log(action.payload);
       });
   },
 });
 
 export const {} = authSlice.actions;
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, validateSession };
 
 export default authSlice.reducer;
