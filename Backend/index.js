@@ -4,19 +4,18 @@ const app = express();
 const { createServer } = require("http");
 const server = createServer(app);
 const { Server } = require("socket.io");
-const { verifyJwt } = require("./utils/jwt.utils");
 require("dotenv").config();
 
 app.use(
   cors({
-    origin: "http://127.0.0.1:5173",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 
 const io = new Server(server, {
   cors: {
-    origin: "http://127.0.0.1:5173",
+    origin: "http://localhost:5173",
     credentials: true,
   },
 });
@@ -27,37 +26,20 @@ const fileRouter = require("./routes/file.routes");
 const messageRouter = require("./routes/message.routes");
 const { connectToDb } = require("./db/db");
 const cookieParser = require("cookie-parser");
-const { requireUser } = require("./middlewares/auth.middleware");
+const {  validateSession } = require("./middlewares/auth.middleware");
 
 app.use(cookieParser());
 app.use(express.json());
 
 const port = process.env.PORT || 3030;
 
-const validateSession = async (req, res, next) => {
-  const accessToken = req.cookies.accessToken;
-  if (accessToken) {
-    const { decoded, valid } = verifyJwt(accessToken);
-    if (decoded && valid) {
-      console.log({ decoded });
-      req.locals = {
-        user: false,
-      };
-      req.locals.user = decoded;
-    }
-    return next();
-  } else {
-    console.log("token not present");
-    return next();
-  }
-};
+app.use("/api/auth", authRouter);
 
 app.use(validateSession);
 
-app.use("/api/auth", authRouter);
-app.use("/api/friends", requireUser, friendsRouter);
-app.use("/api/file", requireUser, fileRouter);
-app.use("/api/chat", requireUser, messageRouter);
+app.use("/api/friends", friendsRouter);
+app.use("/api/file", fileRouter);
+app.use("/api/chat", messageRouter);
 
 app.get("/", (req, res) => {
   res.send(`App is running on port ${port}`);

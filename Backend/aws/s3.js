@@ -29,7 +29,7 @@ const uploadObject = async (filePath, fileKey) => {
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: fileKey,
-    Body: readStream
+    Body: readStream,
   });
   const response = await client.send(command);
   console.log(response);

@@ -5,11 +5,16 @@ import "./index.css";
 import "./main.scss";
 import { Provider } from "react-redux";
 import { store } from "./store/index.js";
+import { QueryClient, QueryClientProvider } from "react-query";
 
-console.log(import.meta.env['VITE_TEST'])
+console.log(import.meta.env["VITE_TEST"]);
+
+const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </Provider>
 );

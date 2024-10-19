@@ -15,6 +15,15 @@ require("dotenv").config();
 
 const app_url = process.env.APP_URL;
 
+const accessTokenCookieOptions = {
+  maxAge: 900000, // 15 mins
+  httpOnly: true,
+  domain: "localhost",
+  path: "/",
+  sameSite: "lax",
+  secure: false,
+};
+
 const userRegister = async (req, res) => {
   const form = formidable();
   form.parse(req, async (err, fields, files) => {
@@ -156,14 +165,6 @@ const userLogin = async (req, res) => {
       //JWT SECRET
       const secret = process.env.SECRET;
 
-      req.session.user = {
-        id: doesExist._id,
-        email: doesExist.email,
-        username: doesExist.username,
-        image: doesExist.image,
-        registerTime: doesExist.createdAt,
-      };
-
       const token = jwt.sign(
         {
           id: doesExist._id,
@@ -178,10 +179,12 @@ const userLogin = async (req, res) => {
         }
       );
 
-      return res.json({
-        message: "Login successful",
-        access_token: token,
-      });
+      return res
+        .cookie("accessToken", token, accessTokenCookieOptions)
+        .json({
+          message: "Login successful",
+          access_token: token,
+        });
     } else {
       errors.push("Invalid password");
       return res.json({ errors });
@@ -246,15 +249,6 @@ async function getGoogleUser({ id_token, access_token }) {
     throw new Error(error.message);
   }
 }
-
-const accessTokenCookieOptions = {
-  maxAge: 900000, // 15 mins
-  httpOnly: true,
-  domain: "localhost",
-  path: "/",
-  sameSite: "lax",
-  secure: false,
-};
 
 const googleAuthHandler = async (req, res) => {
   const code = req.query.code;

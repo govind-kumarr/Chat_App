@@ -12,13 +12,7 @@ const initialState = {
 
 const Login = () => {
   const [state, setState] = useState(initialState);
-  const { authenticate } = useSelector((store) => store.auth);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log("Use Effect");
-    if (authenticate) navigate("/");
-  }, [authenticate]);
 
   const dispatch = useDispatch();
 
@@ -52,7 +46,7 @@ const Login = () => {
     });
   };
   useEffect(() => {
-    dispatch(validateSession());
+    // dispatch(validateSession());
   }, []);
 
   return (
