@@ -1,28 +1,42 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Messanger from "./components/Messanger";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import RootLayout from "./layout";
+import MyProfile from "./components/MyMessages";
+import { CssVarsProvider } from "@mui/joy/styles";
+import CssBaseline from "@mui/joy/CssBaseline";
 
 function App() {
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <RootLayout />,
+      children: [
+        {
+          path: "messages",
+          id: "messages",
+          element: <MyProfile />,
+        },
+      ],
+    },
+    {
+      path: "/login",
+      element: <Login />,
+      id: "login",
+    },
+    {
+      path: "/register",
+      element: <Register />,
+      id: "register",
+    },
+  ]);
+
   return (
-    <div>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Messanger />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/messanger/login" element={<Login />} />
-          <Route path="/messanger/register" element={<Register />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <CssVarsProvider disableTransitionOnChange>
+      <CssBaseline />
+      <RouterProvider router={router} />
+    </CssVarsProvider>
   );
 }
 

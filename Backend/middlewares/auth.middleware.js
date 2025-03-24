@@ -9,6 +9,7 @@ const validateSession = async (req, res, next) => {
         user: false,
       };
       req.locals.user = decoded;
+      console.log({ decoded });
     }
     return next();
   } else {

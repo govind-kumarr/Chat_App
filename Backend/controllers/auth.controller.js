@@ -36,6 +36,8 @@ const userRegister = async (req, res) => {
     username = username[0];
     password = password[0];
     email = email[0];
+    console.log({ files });
+
     let { image } = files;
 
     let errors = [];
@@ -59,7 +61,9 @@ const userRegister = async (req, res) => {
       });
     }
 
-    image = image[0];
+    image = image?.length > 0 ? image[0] : image;
+    console.log({ image });
+
     const fileName = image.originalFilename;
     const randNo = Math.floor(Math.random() * 100000);
     const newFileName = randNo + fileName;
@@ -179,12 +183,10 @@ const userLogin = async (req, res) => {
         }
       );
 
-      return res
-        .cookie("accessToken", token, accessTokenCookieOptions)
-        .json({
-          message: "Login successful",
-          access_token: token,
-        });
+      return res.cookie("accessToken", token, accessTokenCookieOptions).json({
+        message: "Login successful",
+        access_token: token,
+      });
     } else {
       errors.push("Invalid password");
       return res.json({ errors });
