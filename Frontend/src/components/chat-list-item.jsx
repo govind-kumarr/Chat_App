@@ -1,26 +1,26 @@
-import * as React from "react";
-import Box from "@mui/joy/Box";
-import ListDivider from "@mui/joy/ListDivider";
-import ListItem from "@mui/joy/ListItem";
-import ListItemButton from "@mui/joy/ListItemButton";
-import Stack from "@mui/joy/Stack";
-import Typography from "@mui/joy/Typography";
-import CircleIcon from "@mui/icons-material/Circle";
-import AvatarWithStatus from "./AvatarWithStatus";
+import React from "react";
 import { toggleMessagesPane } from "../utils";
+import {
+  Box,
+  ListDivider,
+  ListItem,
+  ListItemButton,
+  Stack,
+  Typography,
+} from "@mui/joy";
+import AvatarWithStatus from "./AvatarWithStatus";
+import CircleIcon from "@mui/icons-material/Circle";
 
-export default function ChatListItem(props) {
-  const { id, sender, messages, selectedChatId, setSelectedChat } = props;
-  const selected = selectedChatId === id;
+const ChatListItem = () => {
   return (
-    <React.Fragment>
+    <>
       <ListItem>
         <ListItemButton
           onClick={() => {
             toggleMessagesPane();
             // setSelectedChat({ id, sender, messages });
           }}
-          selected={selected}
+          selected={true}
           color="neutral"
           sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
         >
@@ -30,13 +30,13 @@ export default function ChatListItem(props) {
               src={"/static/images/avatar/2.jpg"}
             />
             <Box sx={{ flex: 1 }}>
-              <Typography level="title-sm">{sender.name}</Typography>
-              <Typography level="body-sm">{sender.username}</Typography>
+              <Typography level="title-sm">{"Test"}</Typography>
+              <Typography level="body-sm">{"Test"}</Typography>
             </Box>
             <Box sx={{ lineHeight: 1.5, textAlign: "right" }}>
-              {messages[0].unread && (
-                <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-              )}
+              {/* {messages[0].unread && ( */}
+              <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+              {/* )} */}
               <Typography
                 level="body-xs"
                 noWrap
@@ -56,11 +56,14 @@ export default function ChatListItem(props) {
               textOverflow: "ellipsis",
             }}
           >
-            {messages[0].content}
+            {"This is test message"}
+            {/* {messages[0].content} */}
           </Typography>
         </ListItemButton>
       </ListItem>
       <ListDivider sx={{ margin: 0 }} />
-    </React.Fragment>
+    </>
   );
-}
+};
+
+export default ChatListItem;
