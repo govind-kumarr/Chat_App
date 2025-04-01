@@ -9,6 +9,7 @@ const AuthLayout = ({ children }) => {
     queryFn: authenticateUser,
     queryKey: ["authenticateUser"],
     retry: false,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {

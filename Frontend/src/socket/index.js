@@ -46,6 +46,23 @@ class SocketService {
       socketEventEmitter.emit("active-users", data);
     });
   }
+
+  static sendMessage(recipientId, content) {
+    SocketService.socket.emit(
+      "add-message",
+      { recipientId, content },
+      (response) => {
+        console.log({ response });
+      }
+    );
+  }
+
+  static getChatHistory(chatId) {
+    SocketService.socket.emit("get-chat-history", chatId, (response) => {
+      console.log({ response });
+      socketEventEmitter.emit("chat-history", response?.chat || []);
+    });
+  }
 }
 
 export { SocketService };

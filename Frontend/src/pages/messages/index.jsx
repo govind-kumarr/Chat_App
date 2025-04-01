@@ -4,30 +4,31 @@ import ChatsPanel from "./chats-panel";
 import { SocketService } from "../../socket";
 import { socketEventEmitter } from "../../socket/emiitter";
 import { useDispatch, useSelector } from "react-redux";
-import { setChats } from "../../store/chat";
+import { setChatMessages, setChats } from "../../store/chat";
 import MessagePanel from "./message-panel";
 
 const Messages = () => {
   const dispatch = useDispatch();
   const {
     user: { user },
+    chat: { activeChat },
   } = useSelector((state) => state);
   console.log({ user });
 
   useEffect(() => {
     SocketService.connect();
-    socketEventEmitter.on("active-users", (data) => {
-      // console.log("active-users", { data });
-    });
+
     socketEventEmitter.on("chats", (data) => {
       dispatch(setChats(data?.chats));
-      // console.log("chats", { data });
-      // if (Array.isArray(data?.chats) && user) {
-      //   const payload = data?.chats?.filter((c) => c.id !== user?.id);
-      //   dispatch(setChats(payload));
-      // }
+    });
+
+    socketEventEmitter.on("chat-history", (data) => {
+      dispatch(setChatMessages(data));
     });
   }, []);
+  useEffect(() => {
+    if (activeChat) SocketService.getChatHistory(activeChat);
+  }, [activeChat]);
 
   return (
     <Sheet

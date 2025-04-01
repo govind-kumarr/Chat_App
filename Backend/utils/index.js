@@ -1,3 +1,5 @@
+const { default: mongoose } = require("mongoose");
+
 require("dotenv").config();
 
 const password = process.env.USER_RANDOM_PASS;
@@ -38,8 +40,12 @@ const parseCookies = (cookieStr = "") => {
   return cookieObj;
 };
 
+const toObjectId = (id = "") =>
+  mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : id;
+
 module.exports = {
   getUserFromGoogleRes,
   prepareSessionData,
   parseCookies,
+  toObjectId,
 };

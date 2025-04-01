@@ -13,6 +13,7 @@ const UserProvider = ({ children }) => {
     queryKey: ["geteUserInfo"],
     retry: false,
     select: (response) => response.data,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {

@@ -10,15 +10,20 @@ import {
 } from "@mui/joy";
 import AvatarWithStatus from "../../components/AvatarWithStatus";
 import CircleIcon from "@mui/icons-material/Circle";
+import { useDispatch } from "react-redux";
+import { setActiveChat } from "../../store/chat";
 
 const ChatListItem = ({ chat }) => {
-  const { id, username, email, isActive } = chat || {};
+  const dispatch = useDispatch();
+  const { username, email, isActive, id } = chat || {};
+
   return (
     <>
       <ListItem>
         <ListItemButton
           onClick={() => {
             toggleMessagesPane();
+            dispatch(setActiveChat(id));
             // setSelectedChat({ id, sender, messages });
           }}
           selected={true}

@@ -1,5 +1,10 @@
-const { getAllUsers } = require("../services/user.services");
-const { ChatManager } = require("./chat-manager");
+const {
+  getChatHistory,
+  getSocket,
+  addMessage,
+} = require("../services/chat.services");
+const { getAllUsers, changeStatus } = require("../services/user.services");
+const { toObjectId } = require("../utils");
 
 class SocketManager {
   constructor(io, socket) {
@@ -9,35 +14,44 @@ class SocketManager {
     this.handleDisconnect = this.handleDisconnect.bind(this);
   }
 
-  initialize() {
-    const socket = this.socket;
-    if (socket) {
-      const user = socket?.locals?.user;
-      ChatManager.addUser(socket.id, user.id);
-      this.sendChats();
-      this.sendActiveUsers();
-      this.attachListeners();
+  async initialize() {
+    try {
+      const socket = this.socket;
+      if (socket) {
+        const user = socket?.locals?.user;
+        await changeStatus(user.id, true, socket.id);
+        this.sendChats();
+        this.attachListeners();
+      }
+    } catch (error) {
+      console.log(`Error initializing: ${error.message}`);
     }
   }
 
   attachListeners() {
+    const socket = this.socket;
+    const user = socket?.locals?.user;
+    const userId = user?.id;
     this.socket.on("get-chats", async (cb) => {
-      const chats = await this.getChats();
+      const chats = await getAllUsers();
       return cb({ chats });
     });
-    this.socket.on("get-active-users", async (cb) => {
-      const activeUsers = this.getActiveUsers();
-      return cb({ activeUsers });
+    this.socket.on("get-chat-history", async (chatId, cb) => {
+      const chat = await getChatHistory(userId, chatId);
+      return cb({ chat });
+    });
+    this.socket.on("add-message", async (data, cb) => {
+      const res = await addMessage(userId, data?.recipientId, data?.content);
+      cb({ message: "Message added successfully", data: "res" });
     });
     this.socket.on("disconnecting", this.handleDisconnecting);
     this.socket.on("disconnect", this.handleDisconnect);
   }
 
-  handleDisconnecting() {
+  async handleDisconnecting() {
     const user = this.socket?.locals?.user;
     const userId = user.id;
-    ChatManager.removeActive(userId);
-    this.sendActiveUsers();
+    await changeStatus(userId, false, "");
     this.sendChats();
   }
 
@@ -46,40 +60,19 @@ class SocketManager {
     console.log(`User ${user?.username} disconnected`);
   }
 
-  getActiveUsers() {
-    const activeUsers = ChatManager.getActiveUsers();
-    return activeUsers;
-  }
-
-  sendActiveUsers() {
-    const socket = this.socket;
-    const io = this.io;
-    if (socket && io) {
-      const activeUsers = this.getActiveUsers();
-      io.emit("active-users", { activeUsers });
-    }
-  }
-
-  async getChats() {
-    const users = await getAllUsers();
-    const activeUsers = ChatManager.getActiveUsers();
-    const newUsers = users.map((u) => {
-      const user = u.toJSON();
-      return {
-        ...user,
-        isActive: activeUsers.some((ac) => ac.userId === u.id),
-        type: "individual",
-      };
-    });
-    return newUsers;
-  }
-
   async sendChats() {
     const io = this.io;
-    if (io) {
-      const chats = await this.getChats();
-      io.emit("chats", { chats });
-    }
+    const chats = await getAllUsers();
+    io.emit("chats", { chats });
+  }
+
+  async sendChatHistory(senderId, recipientId) {
+    const io = this.io;
+    const sendersSocket = getSocket(senderId);
+    const recieversSocket = getSocket(recipientId);
+    const chats = await getChatHistory(senderId, recipientId);
+    io.to(sendersSocket).emit("chat-history", { chats });
+    io.to(recieversSocket).emit("chat-history", { chats });
   }
 }
 

@@ -10,8 +10,17 @@ import FormatItalicRoundedIcon from "@mui/icons-material/FormatItalicRounded";
 import StrikethroughSRoundedIcon from "@mui/icons-material/StrikethroughSRounded";
 import FormatListBulletedRoundedIcon from "@mui/icons-material/FormatListBulletedRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { useSelector } from "react-redux";
+import { SocketService } from "../../socket";
 
 const MessageInput = () => {
+  const {
+    chat: { activeChat },
+  } = useSelector((state) => state);
+  const handleMessageSend = () => {
+    SocketService.sendMessage(activeChat, "test");
+  };
+
   return (
     <Box sx={{ px: 2, pb: 3 }}>
       <FormControl>
@@ -52,6 +61,7 @@ const MessageInput = () => {
                 color="primary"
                 sx={{ alignSelf: "center", borderRadius: "sm" }}
                 endDecorator={<SendRoundedIcon />}
+                onClick={() => handleMessageSend()}
               >
                 Send
               </Button>

@@ -10,6 +10,7 @@ const AuthRedirect = ({ children }) => {
     queryKey: ["authenticateUser"],
     select: (response) => response?.data,
     retry: false,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
