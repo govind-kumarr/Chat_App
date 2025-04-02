@@ -44,6 +44,18 @@ const MessageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+MessageSchema.virtual("sender", {
+  ref: "users",
+  localField: "senderId",
+  foreignField: "_id",
+});
+
+MessageSchema.virtual("recipient", {
+  ref: "users",
+  localField: "recipientId",
+  foreignField: "_id",
+});
+
 MessageSchema.set("toJSON", {
   virtuals: true,
   versionKey: false,

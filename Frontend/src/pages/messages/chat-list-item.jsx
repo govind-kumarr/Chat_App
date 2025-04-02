@@ -10,11 +10,14 @@ import {
 } from "@mui/joy";
 import AvatarWithStatus from "../../components/AvatarWithStatus";
 import CircleIcon from "@mui/icons-material/Circle";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setActiveChat } from "../../store/chat";
 
 const ChatListItem = ({ chat }) => {
   const dispatch = useDispatch();
+  const {
+    chat: { activeChat },
+  } = useSelector((state) => state);
   const { username, email, isActive, id } = chat || {};
 
   return (
@@ -24,9 +27,8 @@ const ChatListItem = ({ chat }) => {
           onClick={() => {
             toggleMessagesPane();
             dispatch(setActiveChat(id));
-            // setSelectedChat({ id, sender, messages });
           }}
-          selected={true}
+          selected={activeChat === id}
           color="neutral"
           sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
         >
@@ -40,9 +42,9 @@ const ChatListItem = ({ chat }) => {
               <Typography level="body-sm">{email}</Typography>
             </Box>
             <Box sx={{ lineHeight: 1.5, textAlign: "right" }}>
-              {/* {messages[0].unread && ( */}
-              <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-              {/* )} */}
+              {/* {messages[0].unread && (
+                <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+              )} */}
               <Typography
                 level="body-xs"
                 noWrap
@@ -52,7 +54,7 @@ const ChatListItem = ({ chat }) => {
               </Typography>
             </Box>
           </Stack>
-          <Typography
+          {/* TODO: <Typography
             level="body-sm"
             sx={{
               display: "-webkit-box",
@@ -63,8 +65,7 @@ const ChatListItem = ({ chat }) => {
             }}
           >
             {"This is test message"}
-            {/* {messages[0].content} */}
-          </Typography>
+          </Typography> */}
         </ListItemButton>
       </ListItem>
       <ListDivider sx={{ margin: 0 }} />

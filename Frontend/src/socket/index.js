@@ -33,6 +33,10 @@ class SocketService {
     SocketService.socket.on("chats", (data) => {
       socketEventEmitter.emit("chats", data);
     });
+
+    SocketService.socket.on("new-message", (data) => {
+      socketEventEmitter.emit("new-message", data);
+    });
   }
 
   static getChats() {

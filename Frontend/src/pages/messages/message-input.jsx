@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import FormControl from "@mui/joy/FormControl";
@@ -14,11 +14,23 @@ import { useSelector } from "react-redux";
 import { SocketService } from "../../socket";
 
 const MessageInput = () => {
+  const [text, setText] = useState("");
   const {
     chat: { activeChat },
   } = useSelector((state) => state);
-  const handleMessageSend = () => {
-    SocketService.sendMessage(activeChat, "test");
+  const handleMessageSend = (text) => {
+    if (!text || !activeChat) {
+      return;
+    }
+    SocketService.sendMessage(activeChat, text);
+    setText("");
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleMessageSend(text);
+    }
   };
 
   return (
@@ -29,6 +41,9 @@ const MessageInput = () => {
           aria-label="Message"
           minRows={3}
           maxRows={10}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
           endDecorator={
             <Stack
               direction="row"
@@ -43,7 +58,7 @@ const MessageInput = () => {
               }}
             >
               <div>
-                <IconButton size="sm" variant="plain" color="neutral">
+                {/* <IconButton size="sm" variant="plain" color="neutral">
                   <FormatBoldRoundedIcon />
                 </IconButton>
                 <IconButton size="sm" variant="plain" color="neutral">
@@ -54,23 +69,20 @@ const MessageInput = () => {
                 </IconButton>
                 <IconButton size="sm" variant="plain" color="neutral">
                   <FormatListBulletedRoundedIcon />
-                </IconButton>
+                </IconButton> */}
               </div>
               <Button
                 size="sm"
                 color="primary"
                 sx={{ alignSelf: "center", borderRadius: "sm" }}
                 endDecorator={<SendRoundedIcon />}
-                onClick={() => handleMessageSend()}
+                onClick={() => handleMessageSend(text)}
+                disabled={!text}
               >
                 Send
               </Button>
             </Stack>
           }
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-            }
-          }}
           sx={{
             "& textarea:first-of-type": {
               minHeight: 72,

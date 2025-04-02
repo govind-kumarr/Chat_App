@@ -19,9 +19,16 @@ const chatSlice = createSlice({
     setChatMessages: (state, action) => {
       state.activeChatMessages = action.payload;
     },
+    pushMessage: (state, action) => {
+      state.activeChatMessages = [
+        ...(state.activeChatMessages || []),
+        action.payload,
+      ];
+    },
   },
 });
 
-export const { setChats, setActiveChat, setChatMessages } = chatSlice.actions;
+export const { setChats, setActiveChat, setChatMessages, pushMessage } =
+  chatSlice.actions;
 
 export default chatSlice.reducer;

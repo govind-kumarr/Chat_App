@@ -1,17 +1,18 @@
-import { Box, Sheet, Stack } from "@mui/joy";
+import { Box, Divider, Sheet, Stack } from "@mui/joy";
 import React from "react";
 import MessageInput from "./message-input";
 import MessagesPaneHeader from "./message-panel-header";
 import { useSelector } from "react-redux";
 import ChatBubble from "../../components/ChatBubble";
+import AvatarWithStatus from "../../components/AvatarWithStatus";
+import { getGroupMessages } from "../../utils";
 
 const MessagePanel = () => {
   const {
     user: { user },
-    chat: { chats, activeChat, activeChatMessages },
+    chat: { activeChat, activeChatMessages },
   } = useSelector((state) => state);
-  const sender = chats?.find((c) => c.id === activeChat);
-  console.log({ activeChat, activeChatMessages });
+  const groupedMessages = getGroupMessages(activeChatMessages);
 
   return (
     <Sheet
@@ -36,27 +37,37 @@ const MessagePanel = () => {
       >
         <Stack spacing={2} sx={{ justifyContent: "flex-end" }}>
           {activeChat &&
-            activeChatMessages?.length > 0 &&
-            activeChatMessages.map((message, index) => {
-              const isYou = message?.senderId === user?.id;
+            Object.keys(groupedMessages).map((date) => {
+              const messages = groupedMessages[date];
               return (
-                <Stack
-                  key={index}
-                  direction="row"
-                  spacing={2}
-                  sx={{ flexDirection: isYou ? "row-reverse" : "row" }}
-                >
-                  {!isYou && (
-                    <AvatarWithStatus
-                      online={sender.isActive}
-                      src={sender.avatar}
-                    />
-                  )}
-                  <ChatBubble
-                    variant={isYou ? "sent" : "received"}
-                    {...message}
-                  />
-                </Stack>
+                <>
+                  <Divider>{date}</Divider>
+                  {messages?.length > 0 &&
+                    messages.map((message, index) => {
+                      const { sender } = message;
+                      const isYou = message?.senderId === user?.id;
+                      return (
+                        <Stack
+                          key={index}
+                          direction="row"
+                          spacing={2}
+                          sx={{ flexDirection: isYou ? "row-reverse" : "row" }}
+                        >
+                          {!isYou && (
+                            <AvatarWithStatus
+                              online={sender.isActive}
+                              src={sender.avatar}
+                            />
+                          )}
+                          <ChatBubble
+                            variant={isYou ? "sent" : "received"}
+                            {...message}
+                            sender={isYou ? "You" : sender}
+                          />
+                        </Stack>
+                      );
+                    })}
+                </>
               );
             })}
         </Stack>

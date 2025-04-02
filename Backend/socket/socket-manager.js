@@ -2,6 +2,7 @@ const {
   getChatHistory,
   getSocket,
   addMessage,
+  findAndPopulateMessage,
 } = require("../services/chat.services");
 const { getAllUsers, changeStatus } = require("../services/user.services");
 const { toObjectId } = require("../utils");
@@ -12,6 +13,7 @@ class SocketManager {
     this.io = io;
     this.handleDisconnecting = this.handleDisconnecting.bind(this);
     this.handleDisconnect = this.handleDisconnect.bind(this);
+    this.sendNewMessage = this.sendNewMessage.bind(this);
   }
 
   async initialize() {
@@ -41,8 +43,13 @@ class SocketManager {
       return cb({ chat });
     });
     this.socket.on("add-message", async (data, cb) => {
-      const res = await addMessage(userId, data?.recipientId, data?.content);
-      cb({ message: "Message added successfully", data: "res" });
+      try {
+        const res = await addMessage(userId, data?.recipientId, data?.content);
+        cb({ message: "Message added successfully", data: "res" });
+        this.sendNewMessage(res);
+      } catch (error) {
+        console.log(`Error: ${error?.message}`);
+      }
     });
     this.socket.on("disconnecting", this.handleDisconnecting);
     this.socket.on("disconnect", this.handleDisconnect);
@@ -58,6 +65,22 @@ class SocketManager {
   handleDisconnect() {
     const user = this.socket?.locals?.user;
     console.log(`User ${user?.username} disconnected`);
+  }
+
+  async sendNewMessage(messages) {
+    const io = this.io;
+    if (messages && Array.isArray(messages) && messages?.length > 0 && io) {
+      const [message] = messages;
+      const populatedMessage = await findAndPopulateMessage(message?._id);
+      populatedMessage["sender"] = populatedMessage.senderId;
+      populatedMessage["recipient"] = populatedMessage.recipientId;
+      populatedMessage["senderId"] = populatedMessage?.sender?._id;
+      populatedMessage["recipientId"] = populatedMessage?.recipient?._id;
+      const sendersSocket = populatedMessage?.sender?.socketId;
+      const recieversSocket = populatedMessage?.recipient?.socketId;
+      io.to(sendersSocket).emit("new-message", populatedMessage);
+      io.to(recieversSocket).emit("new-message", populatedMessage);
+    }
   }
 
   async sendChats() {

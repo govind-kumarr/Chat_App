@@ -8,9 +8,10 @@ import Typography from "@mui/joy/Typography";
 import CelebrationOutlinedIcon from "@mui/icons-material/CelebrationOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
+import { getFormattedDate } from "../utils";
 
 export default function ChatBubble(props) {
-  const { content, variant, timestamp, attachment = undefined, sender } = props;
+  const { content, variant, createdAt, attachment = undefined, sender } = props;
   const isSent = variant === "sent";
   const [isHovered, setIsHovered] = React.useState(false);
   const [isLiked, setIsLiked] = React.useState(false);
@@ -23,9 +24,11 @@ export default function ChatBubble(props) {
         sx={{ justifyContent: "space-between", mb: 0.25 }}
       >
         <Typography level="body-xs">
-          {sender === "You" ? sender : sender.name}
+          {sender === "You" ? sender : sender?.username}
         </Typography>
-        <Typography level="body-xs">{timestamp}</Typography>
+        <Typography level="body-xs">
+          {getFormattedDate(createdAt, "HH:MM A")}
+        </Typography>
       </Stack>
       {attachment ? (
         <Sheet
