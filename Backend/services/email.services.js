@@ -5,12 +5,11 @@ const mailerSend = new MailerSend({
   apiKey: process.env.MAILER_SEND_API_KEY,
 });
 
+const MAILER_SEND_EMAIL_ID = process.env.MAILER_SEND_EMAIL_ID;
+const MAILER_SEND_SENDER_NAME = process.env.MAILER_SEND_SENDER_NAME;
 const sendPasswordResetEmail = async (recipient, resetPasswordLink) => {
   try {
-    const sentFrom = new Sender(
-      "MS_aMu9ry@test-dnvo4d97rz3g5r86.mlsender.net",
-      "Govind Kumar"
-    );
+    const sentFrom = new Sender(MAILER_SEND_EMAIL_ID, MAILER_SEND_SENDER_NAME);
     const sentTo = [new Recipient(recipient?.email, recipient?.username)];
     const personalization = [
       {
