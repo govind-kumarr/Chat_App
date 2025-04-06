@@ -1,7 +1,6 @@
 import "./App.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import Login from "./pages/login";
-import Register from "./pages/register";
+import Authentcation from "./pages/authentication";
 import RootLayout from "./layout";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
@@ -10,6 +9,7 @@ import AuthLayout from "./layout/auth.layout";
 import AuthRedirect from "./layout/auth-redirect";
 import UserProvider from "./layout/user-provider";
 import Messages from "./pages/messages";
+import ForgotPassword from "./pages/authentication/forgot-password";
 
 function App() {
   const router = createBrowserRouter([
@@ -36,22 +36,23 @@ function App() {
       ],
     },
     {
-      path: "/login",
+      path: "/auth",
       element: (
         <AuthRedirect>
-          <Login />
+          <Authentcation />
         </AuthRedirect>
       ),
-      id: "login",
+      id: "auth",
     },
+    // {
+    //   path: "/auth/forgot-password/:resetPasswordToken",
+    //   element: <ForgotPassword />,
+    //   id: "forgot-password-token",
+    // },
     {
-      path: "/register",
-      element: (
-        <AuthRedirect>
-          <Register />
-        </AuthRedirect>
-      ),
-      id: "register",
+      path: "/auth/forgot-password",
+      element: <ForgotPassword />,
+      id: "forgot-password",
     },
   ]);
 

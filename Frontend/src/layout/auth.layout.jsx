@@ -28,7 +28,7 @@ const AuthLayout = ({ children }) => {
     );
   }
 
-  if (isError) return <Navigate to={"/login"} />;
+  if (isError) return <Navigate to={"/auth"} />;
 
   return <>{children}</>;
 };

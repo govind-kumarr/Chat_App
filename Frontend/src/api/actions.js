@@ -17,6 +17,22 @@ const loginUser = (data) => {
   });
 };
 
+const forgotPassword = (data) => {
+  return apiClient({
+    url: ROUTES.FORGOT_PASSWORD.URL,
+    method: ROUTES.FORGOT_PASSWORD.METHOD,
+    data,
+  });
+};
+
+const resetPassword = (data) => {
+  return apiClient({
+    url: ROUTES.RESET_PASSWORD.URL,
+    method: ROUTES.RESET_PASSWORD.METHOD,
+    data,
+  });
+};
+
 const logoutUser = () => {
   return apiClient({
     url: ROUTES.LOGOUT.URL,
@@ -38,4 +54,12 @@ const geteUserInfo = () => {
   });
 };
 
-export { loginUser, registerUser, authenticateUser, logoutUser, geteUserInfo };
+export {
+  loginUser,
+  registerUser,
+  authenticateUser,
+  logoutUser,
+  geteUserInfo,
+  forgotPassword,
+  resetPassword,
+};

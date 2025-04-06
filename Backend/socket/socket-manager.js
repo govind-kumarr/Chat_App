@@ -56,10 +56,14 @@ class SocketManager {
   }
 
   async handleDisconnecting() {
-    const user = this.socket?.locals?.user;
-    const userId = user.id;
-    await changeStatus(userId, false, "");
-    this.sendChats();
+    try {
+      const user = this.socket?.locals?.user;
+      const userId = user.id;
+      await changeStatus(userId, false, "");
+      this.sendChats();
+    } catch (error) {
+      console.log(`Error: ${error?.message}`);
+    }
   }
 
   handleDisconnect() {

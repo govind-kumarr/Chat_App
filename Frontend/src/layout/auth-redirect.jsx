@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Box, Typography } from "@mui/joy";
 
 const AuthRedirect = ({ children }) => {
-  const { data, isLoading, isError } = useQuery({
+  const { isLoading, isError } = useQuery({
     queryFn: authenticateUser,
     queryKey: ["authenticateUser"],
     select: (response) => response?.data,

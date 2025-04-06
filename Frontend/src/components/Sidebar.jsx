@@ -28,7 +28,7 @@ export default function Sidebar() {
     mutationKey: "logoutUser",
     onSuccess: (response) => {
       console.log({ response });
-      navigate("/login");
+      navigate("/auth");
     },
   });
 

@@ -1,35 +1,34 @@
 import React from "react";
+import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
-import { registerUser } from "../../api/actions";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { showSnackbar } from "../../store/snackbar";
-import * as Yup from "yup";
+import { forgotPassword, loginUser } from "../../api/actions";
 import {
   Box,
   Button,
+  Checkbox,
+  Divider,
   FormControl,
   FormHelperText,
   FormLabel,
+  IconButton,
   Input,
+  Link,
   Stack,
   Typography,
 } from "@mui/joy";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { showSnackbar } from "../../store/snackbar";
+import GoogleIcon from "../../assets/icons";
 
-const defaultRegisterValues = {
-  username: "",
+const defaultLoginValues = {
   email: "",
   password: "",
-  confirmPassword: "",
 };
 
-const registerSchema = Yup.object().shape({
-  username: Yup.string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must not exceed 20 characters")
-    .required("Username is required"),
+const loginSchema = Yup.object().shape({
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
@@ -43,43 +42,40 @@ const registerSchema = Yup.object().shape({
       "Password must contain at least one special character"
     )
     .required("Password is required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords must match")
-    .required("Confirm Password is required"),
 });
 
-const Register = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+const Login = () => {
   const {
     control,
     formState: { errors },
     handleSubmit,
     reset,
   } = useForm({
-    defaultValues: defaultRegisterValues,
-    resolver: yupResolver(registerSchema),
+    defaultValues: defaultLoginValues,
+    resolver: yupResolver(loginSchema),
   });
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const { mutate: registerMutate, isPending: registerPending } = useMutation({
-    mutationFn: registerUser,
-    mutationKey: "registerUser",
+  const { mutate: loginMutate, isPending: loginPending } = useMutation({
+    mutationFn: loginUser,
+    mutationKey: "loginUser",
     onSuccess: (response) => {
       console.log({ response });
       // Show toast message
       reset();
       dispatch(
         showSnackbar({
-          message: "User registered successfully!",
+          message: response?.data?.message || "Logged in successfully!",
           variant: "success",
         })
       );
-      navigate("/login");
+      navigate("/");
     },
   });
 
-  const submitRegister = (values) => {
-    registerMutate(values);
+  const submitLogin = (values) => {
+    loginMutate(values);
   };
 
   return (
@@ -133,22 +129,30 @@ const Register = () => {
         >
           <Stack sx={{ gap: 1, textAlign: "center" }}>
             <Typography component="h1" level="h3">
-              Sign Up
+              Sign In
             </Typography>
           </Stack>
+          <Stack sx={{ gap: 4, mb: 2 }}>
+            <Button
+              variant="soft"
+              color="neutral"
+              fullWidth
+              startDecorator={<GoogleIcon />}
+            >
+              Continue with Google
+            </Button>
+          </Stack>
+          <Divider
+            sx={(theme) => ({
+              [theme.getColorSchemeSelector("light")]: {
+                color: { xs: "#FFF", md: "text.tertiary" },
+              },
+            })}
+          >
+            or
+          </Divider>
           <Stack sx={{ gap: 4, mt: 2 }}>
-            <form onSubmit={handleSubmit(submitRegister)}>
-              <Controller
-                name="username"
-                control={control}
-                render={({ field }) => (
-                  <FormControl>
-                    <FormLabel>Username</FormLabel>
-                    <Input {...field} />
-                    <FormHelperText>{errors?.username?.message}</FormHelperText>
-                  </FormControl>
-                )}
-              />
+            <form onSubmit={handleSubmit(submitLogin)}>
               <Controller
                 name="email"
                 control={control}
@@ -171,23 +175,22 @@ const Register = () => {
                   </FormControl>
                 )}
               />
-              <Controller
-                name="confirmPassword"
-                control={control}
-                render={({ field }) => (
-                  <FormControl>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <Input {...field} />
-                    <FormHelperText>
-                      {errors?.confirmPassword?.message}
-                    </FormHelperText>
-                  </FormControl>
-                )}
-              />
 
               <Stack sx={{ gap: 4, mt: 2 }}>
-                <Button type="submit" disabled={registerPending} fullWidth>
-                  Sign Up
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Checkbox size="sm" label="Remember me" name="persistent" />
+                  <Link level="title-sm" href="/auth/forgot-password">
+                    Forgot your password?
+                  </Link>
+                </Box>
+                <Button type="submit" disabled={loginPending} fullWidth>
+                  Sign in
                 </Button>
               </Stack>
             </form>
@@ -199,4 +202,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Login;

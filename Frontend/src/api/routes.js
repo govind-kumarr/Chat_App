@@ -7,6 +7,14 @@ export const ROUTES = {
     URL: "/api/auth/user-login",
     METHOD: "POST",
   },
+  FORGOT_PASSWORD: {
+    URL: "/api/auth/forgot-password",
+    METHOD: "POST",
+  },
+  RESET_PASSWORD: {
+    URL: "/api/auth/reset-password",
+    METHOD: "POST",
+  },
   LOGOUT: {
     URL: "/api/auth/logout",
     METHOD: "POST",

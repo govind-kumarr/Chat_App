@@ -3,6 +3,7 @@ const { default: mongoose } = require("mongoose");
 require("dotenv").config();
 
 const password = process.env.USER_RANDOM_PASS;
+const APP_URL = process.env.APP_URL;
 
 const getUserFromGoogleRes = (googleUser = {}) => {
   const newUser = {
@@ -40,12 +41,23 @@ const parseCookies = (cookieStr = "") => {
   return cookieObj;
 };
 
+const isAfter = (date) => {
+  const now = new Date();
+  const dateObj = new Date(date);
+  return dateObj > now;
+};
+
 const toObjectId = (id = "") =>
   mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : id;
+
+const constructResetPasswordLink = (token) =>
+  `${APP_URL}auth/forgot-password?token=${encodeURIComponent(token)}`.trim();
 
 module.exports = {
   getUserFromGoogleRes,
   prepareSessionData,
   parseCookies,
   toObjectId,
+  isAfter,
+  constructResetPasswordLink,
 };

@@ -1,5 +1,6 @@
 const { UserModel } = require("../models/User.modal");
 const bcrypt = require("bcrypt");
+const { verifyJwt } = require("../utils/jwt.utils");
 
 const createUser = async (userData) => {
   try {
@@ -38,6 +39,16 @@ const matchPassword = async (password, hash) => {
   return bcrypt.compare(password, hash);
 };
 
+const doUserExist = async (email) => {
+  try {
+    if (!email) return false;
+    const userExist = await UserModel.findOne({ email });
+    return !!userExist?.email ? userExist : false;
+  } catch (error) {
+    console.log(`Error: ${error?.message}`);
+  }
+};
+
 const verifyUser = async (userData) => {
   const { email, password } = userData || {};
   const userExist = await UserModel.findOne({
@@ -67,7 +78,32 @@ const getActiveUsers = async () => {
 };
 
 const changeStatus = async (userId = "", isActive = false, socketId = "") => {
-  return await UserModel.findByIdAndUpdate(userId, { isActive, socketId });
+  return await UserModel.findByIdAndUpdate(userId, {
+    isActive,
+    socketId,
+    lastActiveAt: isActive ? null : new Date(),
+  });
+};
+
+const checkPasswordReset = async (userId) => {
+  const user = await UserModel.findById(userId);
+  const tokenExpiry = user?.resetTokenExpiry;
+  const resetToken = user?.resetPasswordToken;
+  return tokenExpiry || resetToken;
+};
+
+const verifyToken = async (token) => {
+  const tokenUser = await UserModel.findOne({ resetPasswordToken: token });
+  const { valid, expired, decoded } = verifyJwt(token);
+  return {
+    valid:
+      valid &&
+      tokenUser?.email &&
+      !expired &&
+      decoded.email === tokenUser?.email,
+    decoded,
+    tokenUser,
+  };
 };
 
 module.exports = {
@@ -77,4 +113,7 @@ module.exports = {
   getAllUsers,
   getActiveUsers,
   changeStatus,
+  doUserExist,
+  checkPasswordReset,
+  verifyToken,
 };
