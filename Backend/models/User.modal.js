@@ -14,10 +14,18 @@ const UserSchema = new mongoose.Schema(
       type: String,
     },
     avatar: {
-      type: String,
-      default:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286",
-      required: false,
+      key: {
+        type: String,
+      },
+      url: {
+        type: String,
+        default:
+          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286",
+        required: false,
+      },
+      urlExpiry: {
+        type: Date,
+      },
     },
     socketId: {
       type: String,
@@ -48,12 +56,25 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+UserSchema.methods.checkAvatar = async function ()  {
+  const newUrl = await generateAvatarUrl(this);
+  if(newUrl) {
+    this.avatar.url = newUrl;
+    await this.save();
+  }
+}
+
 UserSchema.set("toJSON", {
   virtuals: true,
   versionKey: false,
   transform: function (doc, ret) {
+    ret.avatar = ret?.avatar?.url || null;
+    
     delete ret["password"];
     delete ret._id;
+    delete ret.resetPasswordToken;
+    delete ret.resetTokenExpiry;
+
     return ret;
   },
 });

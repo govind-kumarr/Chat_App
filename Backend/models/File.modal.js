@@ -19,11 +19,23 @@ const FileSchema = new mongoose.Schema(
       required: false,
       ref: "users",
     },
+    storageKey: {
+      type: String,
+    },
     url: {
       type: String,
     },
-    storageKey: {
-      type: String,
+    urlExpiry: {
+      type: Date,
+    },
+    uploaded: {
+      type: Boolean,
+      default: false,
+    },
+    uploadedAt: {
+      type: Date,
+      required: false,
+      default: null,
     },
   },
   { timestamps: true }

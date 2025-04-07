@@ -80,7 +80,7 @@ class AWS_Setup {
     };
     const command = new GetObjectCommand(options);
     const url = await getSignedUrl(client, command, {
-      expiresIn: 60 * 60,
+      expiresIn: 7 * 24 * 60 * 60,
     });
     return url;
   }

@@ -1,6 +1,7 @@
 const { UserModel } = require("../models/User.modal");
 const bcrypt = require("bcrypt");
 const { verifyJwt } = require("../utils/jwt.utils");
+const aws = require("../aws");
 
 const createUser = async (userData) => {
   try {
@@ -104,6 +105,22 @@ const verifyToken = async (token) => {
     decoded,
     tokenUser,
   };
+};
+
+const generateAvatarUrl = async (user) => {
+  const { avatar } = user || {};
+  if (!avatar) return null;
+  const { url, key, urlExpiry } = avatar || {};
+  if (urlExpiry && isIsoString(urlExpiry)) {
+    const now = new Date();
+    const expiryDate = new Date(urlExpiry);
+    if (now > expiryDate) {
+      // Generate a new pre signed url
+      const newUrl = await aws.getPreSignedUrl(key);
+      return newUrl;
+    }
+  }
+  return null;
 };
 
 module.exports = {

@@ -29,10 +29,9 @@ const MessageSchema = new mongoose.Schema(
       default: "",
     },
     file: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: false,
-      default: "",
-      // ref: "users", // Change to files collection later
+      ref: "files"
     },
     status: {
       type: String,

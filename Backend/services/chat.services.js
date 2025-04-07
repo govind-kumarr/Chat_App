@@ -1,6 +1,7 @@
 const { MessageModel } = require("../models/Message.modal");
 const { UserModel } = require("../models/User.modal");
 const { toObjectId } = require("../utils");
+const { createFile } = require("./file.services");
 
 const getChatHistory = async (senderId, recipientId) => {
   const messages = await MessageModel.aggregate([
@@ -68,15 +69,30 @@ const findAndPopulateMessage = async (id) => {
     .lean();
 };
 
-const addMessage = async (senderId, recipientId, content) => {
+const addMessage = async (senderId, data) => {
+  const { recipientId, content, messageType, type, fileInfo, groupId } =
+    data || {};
+
+  if (messageType === "media") {
+    const file = await createFile(fileInfo);
+    const message = new MessageModel({
+      senderId: toObjectId(senderId),
+      type: "media",
+      file: toObjectId(file?._id),
+    });
+    await message.save();
+    return message;
+  }
+
   if (senderId && recipientId && content) {
-    return MessageModel.insertMany([
-      {
-        senderId: toObjectId(senderId),
-        recipientId: toObjectId(recipientId),
-        content,
-      },
-    ]);
+    const message = new MessageModel({
+      senderId: toObjectId(senderId),
+      content,
+    });
+    message[type === "group" ? "groupId" : "recipientId"] =
+      type === "group" ? toObjectId(recipientId) : toObjectId(groupId);
+    await message.save();
+    return message;
   }
 };
 

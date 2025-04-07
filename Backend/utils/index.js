@@ -64,6 +64,10 @@ const getStorageKey = ({ type, fileId, userId = "", chatId = "" }) => {
   ).trim();
 };
 
+const isIsoString = (str) => {
+  return new Date(str).toISOString() === str;
+};
+
 module.exports = {
   getUserFromGoogleRes,
   prepareSessionData,
@@ -73,4 +77,5 @@ module.exports = {
   constructResetPasswordLink,
   getStorageKey,
   parseObjectId,
+  isIsoString
 };
