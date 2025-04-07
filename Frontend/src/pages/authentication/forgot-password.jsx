@@ -5,7 +5,6 @@ import { Controller, useForm } from "react-hook-form";
 import {
   Box,
   Button,
-  Divider,
   FormControl,
   FormHelperText,
   FormLabel,
@@ -13,16 +12,35 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
-import { showSnackbar } from "../../store/snackbar";
-import { useMutation } from "@tanstack/react-query";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { object, ref, string } from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import useAppMutation from "../../hooks/useAppMutation";
 
-const defaultLoginValues = {
+const defaultForgotPassValues = {
   email: "",
   password: "",
   confirmPassword: "",
   resetPasswordToken: "",
 };
+
+const forgotPassSchema = object({
+  password: string()
+    .min(8, "Password must be at least 8 characters")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .matches(/\d/, "Password must contain at least one number")
+    .matches(
+      /[!@#$%^&*(),.?":{}|<>]/,
+      "Password must contain at least one special character"
+    ),
+  confirmPassword: string().oneOf([ref("password")], "Passwords must match"),
+  email: string().email("Invalid email address"),
+  resetPasswordToken: string(),
+});
+
+const sendEmailFields = ["email"];
+const resetPassFields = ["password", "confirmPassword", "resetPasswordToken"];
 
 const ForgotPassword = () => {
   const dispatch = useDispatch();
@@ -36,57 +54,59 @@ const ForgotPassword = () => {
     watch,
     reset,
     setValue,
+    trigger,
   } = useForm({
-    defaultValues: defaultLoginValues,
-    // resolver: yupResolver(loginSchema),
+    defaultValues: defaultForgotPassValues,
+    resolver: yupResolver(forgotPassSchema),
+    mode: "onChange",
   });
 
-  const [email, resetPasswordToken] = watch(["email", "resetPasswordToken"]);
-
-  console.log({ resetPasswordToken });
+  const [email, resetPasswordToken, password, confirmPassword] = watch([
+    "email",
+    "resetPasswordToken",
+    "password",
+    "confirmPassword",
+  ]);
 
   const { mutate: forgotPassMutate, isPending: forgotPassPending } =
-    useMutation({
+    useAppMutation({
       mutationFn: forgotPassword,
       mutationKey: "forgotPassword",
       onSuccess: (response) => {
-        console.log({ response });
-        dispatch(
-          showSnackbar({
-            message: response?.data?.message || "Reset link sent successfully!",
-            variant: "success",
-          })
-        );
         reset();
       },
     });
 
-  const { mutate: resetPassMutate, isPending: resetPassPending } = useMutation({
-    mutationFn: resetPassword,
-    mutationKey: "resetPassword",
-    onSuccess: (response) => {
-      console.log({ response });
-      dispatch(
-        showSnackbar({
-          message: response?.data?.message || "Password successfully!",
-          variant: "success",
-        })
-      );
-      navigate("/auth");
-    },
-  });
+  const { mutate: resetPassMutate, isPending: resetPassPending } =
+    useAppMutation({
+      mutationFn: resetPassword,
+      mutationKey: "resetPassword",
+      onSuccess: (response) => {
+        console.log({ response });
+        // dispatch(
+        //   showSnackbar({
+        //     message: response?.data?.message || "Password successfully!",
+        //     variant: "success",
+        //   })
+        // );
+        navigate("/auth");
+      },
+    });
 
-  const handlePasswordReset = (values) => {
-    const { password, confirmPassword } = values;
+  const handlePasswordReset = async () => {
     if (!resetPasswordToken && email) {
-      forgotPassMutate({ email });
+      const validateEmail = await trigger(sendEmailFields);
+      validateEmail ? forgotPassMutate({ email }) : null;
       return;
     }
-    resetPassMutate({
-      password,
-      confirmPassword,
-      resetPasswordToken,
-    });
+    const validatePass = await trigger(resetPassFields);
+    validatePass
+      ? resetPassMutate({
+          password,
+          confirmPassword,
+          resetPasswordToken,
+        })
+      : null;
   };
 
   useEffect(() => {
@@ -157,7 +177,7 @@ const ForgotPassword = () => {
                   name="email"
                   control={control}
                   render={({ field }) => (
-                    <FormControl>
+                    <FormControl error={!!errors?.[`${field.name}`]?.message}>
                       <FormLabel>Email</FormLabel>
                       <Input {...field} type="email" />
                       <FormHelperText>{errors?.email?.message}</FormHelperText>
@@ -172,7 +192,7 @@ const ForgotPassword = () => {
                     name="password"
                     control={control}
                     render={({ field }) => (
-                      <FormControl>
+                      <FormControl error={!!errors?.[`${field.name}`]?.message}>
                         <FormLabel>New Password</FormLabel>
                         <Input {...field} type="password" />
                         <FormHelperText>
@@ -185,7 +205,7 @@ const ForgotPassword = () => {
                     name="confirmPassword"
                     control={control}
                     render={({ field }) => (
-                      <FormControl>
+                      <FormControl error={!!errors?.[`${field.name}`]?.message}>
                         <FormLabel>Confirm Password</FormLabel>
                         <Input {...field} type="password" />
                         <FormHelperText>
@@ -199,13 +219,14 @@ const ForgotPassword = () => {
 
               <Stack sx={{ gap: 4, mt: 2 }}>
                 <Button
-                  type="submit"
+                  type="button"
                   disabled={
                     resetPassPending ||
                     forgotPassPending ||
                     (!resetPasswordToken && !email)
                   }
                   fullWidth
+                  onClick={() => handlePasswordReset()}
                 >
                   {resetPasswordToken ? "Reset" : "Send Mail"}
                 </Button>

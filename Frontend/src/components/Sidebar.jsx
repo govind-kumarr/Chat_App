@@ -12,10 +12,10 @@ import BrightnessAutoRoundedIcon from "@mui/icons-material/BrightnessAutoRounded
 import ColorSchemeToggle from "./ColorSchemeToggle";
 import { closeSidebar } from "../utils";
 import { logoutUser } from "../api/actions";
-import { useMutation } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import SidebarList from "./sidebar-list";
 import { useSelector } from "react-redux";
+import useAppMutation from "../hooks/useAppMutation";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -23,11 +23,10 @@ export default function Sidebar() {
     user: { user = {} },
   } = useSelector((state) => state);
 
-  const { mutate: logoutMutate, isPending: isLoggingOut } = useMutation({
+  const { mutate: logoutMutate, isPending: isLoggingOut } = useAppMutation({
     mutationFn: logoutUser,
     mutationKey: "logoutUser",
     onSuccess: (response) => {
-      console.log({ response });
       navigate("/auth");
     },
   });

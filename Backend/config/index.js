@@ -24,9 +24,22 @@ const corsOptions = {
   credentials: true,
 };
 
+const loadEnv = () => {
+  return {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.S3_REGION,
+    bucket: process.env.S3_BUCKET,
+    userDir: process.env.S3_USER_DIR,
+    chatDir: process.env.S3_CHAT_DIR,
+    mongodbUrl: process.env.MONGO_URL,
+  };
+};
+
 module.exports = {
   accessTokenCookieOptions,
   jwtOptions,
   configOptions,
-  corsOptions
+  corsOptions,
+  loadEnv,
 };

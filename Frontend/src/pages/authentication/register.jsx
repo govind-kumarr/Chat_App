@@ -1,10 +1,8 @@
 import React from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
 import { registerUser } from "../../api/actions";
 import { useDispatch } from "react-redux";
-import { showSnackbar } from "../../store/snackbar";
 import * as Yup from "yup";
 import {
   Box,
@@ -16,6 +14,7 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
+import useAppMutation from "../../hooks/useAppMutation";
 
 const defaultRegisterValues = {
   username: "",
@@ -59,21 +58,15 @@ const Register = () => {
     resolver: yupResolver(registerSchema),
   });
 
-  const { mutate: registerMutate, isPending: registerPending } = useMutation({
-    mutationFn: registerUser,
-    mutationKey: "registerUser",
-    onSuccess: (response) => {
-      console.log({ response });
-      // Show toast message
-      reset();
-      dispatch(
-        showSnackbar({
-          message: "User registered successfully!",
-          variant: "success",
-        })
-      );
-    },
-  });
+  const { mutate: registerMutate, isPending: registerPending } = useAppMutation(
+    {
+      mutationFn: registerUser,
+      mutationKey: "registerUser",
+      onSuccess: (response) => {
+        reset();
+      },
+    }
+  );
 
   const submitRegister = (values) => {
     registerMutate(values);
@@ -139,7 +132,7 @@ const Register = () => {
                 name="username"
                 control={control}
                 render={({ field }) => (
-                  <FormControl>
+                  <FormControl error={!!errors?.[`${field.name}`]?.message}>
                     <FormLabel>Username</FormLabel>
                     <Input {...field} />
                     <FormHelperText>{errors?.username?.message}</FormHelperText>
@@ -150,7 +143,7 @@ const Register = () => {
                 name="email"
                 control={control}
                 render={({ field }) => (
-                  <FormControl>
+                  <FormControl error={!!errors?.[`${field.name}`]?.message}>
                     <FormLabel>Email</FormLabel>
                     <Input {...field} type="email" />
                     <FormHelperText>{errors?.email?.message}</FormHelperText>
@@ -161,7 +154,7 @@ const Register = () => {
                 name="password"
                 control={control}
                 render={({ field }) => (
-                  <FormControl>
+                  <FormControl error={!!errors?.[`${field.name}`]?.message}>
                     <FormLabel>Password</FormLabel>
                     <Input {...field} type="password" />
                     <FormHelperText>{errors?.password?.message}</FormHelperText>
@@ -172,9 +165,9 @@ const Register = () => {
                 name="confirmPassword"
                 control={control}
                 render={({ field }) => (
-                  <FormControl>
+                  <FormControl error={!!errors?.[`${field.name}`]?.message}>
                     <FormLabel>Confirm Password</FormLabel>
-                    <Input {...field} />
+                    <Input {...field} type="password" />
                     <FormHelperText>
                       {errors?.confirmPassword?.message}
                     </FormHelperText>

@@ -17,11 +17,11 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
-import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { showSnackbar } from "../../store/snackbar";
 import GoogleIcon from "../../assets/icons";
+import useAppMutation from "../../hooks/useAppMutation";
 
 const defaultLoginValues = {
   email: "",
@@ -57,19 +57,11 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { mutate: loginMutate, isPending: loginPending } = useMutation({
+  const { mutate: loginMutate, isPending: loginPending } = useAppMutation({
     mutationFn: loginUser,
     mutationKey: "loginUser",
     onSuccess: (response) => {
-      console.log({ response });
-      // Show toast message
       reset();
-      dispatch(
-        showSnackbar({
-          message: response?.data?.message || "Logged in successfully!",
-          variant: "success",
-        })
-      );
       navigate("/");
     },
   });
@@ -157,7 +149,7 @@ const Login = () => {
                 name="email"
                 control={control}
                 render={({ field }) => (
-                  <FormControl>
+                  <FormControl error={!!errors?.[`${field.name}`]?.message}>
                     <FormLabel>Email</FormLabel>
                     <Input {...field} type="email" />
                     <FormHelperText>{errors?.email?.message}</FormHelperText>
@@ -168,7 +160,7 @@ const Login = () => {
                 name="password"
                 control={control}
                 render={({ field }) => (
-                  <FormControl>
+                  <FormControl error={!!errors?.[`${field.name}`]?.message}>
                     <FormLabel>Password</FormLabel>
                     <Input {...field} type="password" />
                     <FormHelperText>{errors?.password?.message}</FormHelperText>

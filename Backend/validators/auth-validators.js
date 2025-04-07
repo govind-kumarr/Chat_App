@@ -42,7 +42,7 @@ const resetPasswordSchema = Yup.object().shape({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
     .required("Confirm Password is required"),
-  resetPasswordToken: Yup.string(),
+  resetPasswordToken: Yup.string().required("No token found"),
 });
 
 const loginSchema = Yup.object().shape({

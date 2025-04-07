@@ -16,7 +16,6 @@ function verifyJwt(token) {
       decoded,
     };
   } catch (e) {
-    console.error(e);
     return {
       valid: false,
       expired: e.message === "jwt expired",

@@ -50,8 +50,19 @@ const isAfter = (date) => {
 const toObjectId = (id = "") =>
   mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : id;
 
+const parseObjectId = (id = "") =>
+  mongoose.isValidObjectId(id) ? id.toString() : id;
+
 const constructResetPasswordLink = (token) =>
   `${APP_URL}auth/forgot-password?token=${encodeURIComponent(token)}`.trim();
+
+const getStorageKey = ({ type, fileId, userId = "", chatId = "" }) => {
+  return (
+    type === "user-data"
+      ? `${type}/${userId}/avatar/${fileId}`
+      : `${type}/${chatId}/media/${fileId}`
+  ).trim();
+};
 
 module.exports = {
   getUserFromGoogleRes,
@@ -60,4 +71,6 @@ module.exports = {
   toObjectId,
   isAfter,
   constructResetPasswordLink,
+  getStorageKey,
+  parseObjectId,
 };

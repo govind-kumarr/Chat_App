@@ -4,9 +4,11 @@ const app = require("./app");
 require("dotenv").config();
 
 const { connectToDb } = require("./db/db");
-const { corsOptions } = require("./config");
+const { corsOptions, loadEnv } = require("./config");
 const { initializeSocket, attachMiddlewares } = require("./socket");
+const aws = require("./aws");
 const port = process.env.PORT || 3030;
+const config = loadEnv();
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -18,9 +20,22 @@ const io = new Server(server, {
 attachMiddlewares(io);
 initializeSocket(io);
 
-const startServer = () =>
-  server.listen(port, () => {
-    console.log(`Server listening on Port ${port}`);
-  });
+const configureAws = async () => {
+  await aws.setupBucket();
+  await aws.setupDir(config.userDir);
+  await aws.setupDir(config.chatDir);
+};
 
-connectToDb(startServer);
+const startServer = async () => {
+  try {
+    await connectToDb();
+    await configureAws();
+    server.listen(port, () => {
+      console.log(`Server listening on Port ${port}`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+startServer();

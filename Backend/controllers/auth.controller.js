@@ -84,8 +84,8 @@ const forgotPassword = async (req, res) => {
     if (!userExist) {
       throw new Error("User doesn't exist");
     }
-    // const passwordReset = await checkPasswordReset(userExist?._id);
-    if (userExist) {
+    const passwordReset = await checkPasswordReset(userExist?._id);
+    if (userExist && !passwordReset) {
       const token = signJwt({ email }, { expiresIn: 60 * 60 * 1000 });
       userExist.resetPasswordToken = token;
       userExist.resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
@@ -102,6 +102,7 @@ const forgotPassword = async (req, res) => {
       }
       throw new Error();
     }
+    throw new Error("Reset password link already generated!");
   } catch (error) {
     res.status(400).json({ message: error.message || "Something went wrong" });
   }
