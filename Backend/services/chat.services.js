@@ -1,6 +1,7 @@
+const aws = require("../aws");
 const { MessageModel } = require("../models/Message.modal");
 const { UserModel } = require("../models/User.modal");
-const { toObjectId } = require("../utils");
+const { toObjectId, getStorageKey, parseObjectId } = require("../utils");
 const { createFile } = require("./file.services");
 
 const getChatHistory = async (senderId, recipientId) => {
@@ -81,7 +82,18 @@ const addMessage = async (senderId, data) => {
       file: toObjectId(file?._id),
     });
     await message.save();
-    return message;
+    const key = getStorageKey({
+      type: "chat-data",
+      fileId: parseObjectId(file?._id),
+      chatId: `${parseObjectId(senderId)}-${parseObjectId(recipientId)}`,
+    });
+    const url = await aws.generateUploadUrl(key, {
+      mimeType: fileInfo?.mimeType,
+    }); // Modify the mimeType
+    file.url = url;
+    file.urlExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await file.save();
+    return { url };
   }
 
   if (senderId && recipientId && content) {

@@ -111,15 +111,31 @@ const generateAvatarUrl = async (user) => {
   const { avatar } = user || {};
   if (!avatar) return null;
   const { url, key, urlExpiry } = avatar || {};
-  if (urlExpiry && isIsoString(urlExpiry)) {
-    const now = new Date();
-    const expiryDate = new Date(urlExpiry);
-    if (now > expiryDate) {
-      // Generate a new pre signed url
+  if (key) {
+    if (urlExpiry && isIsoString(urlExpiry)) {
+      const now = new Date();
+      const expiryDate = new Date(urlExpiry);
+      if (now > expiryDate) {
+        // Generate a new pre signed url
+        const newUrl = await aws.getPreSignedUrl(key);
+        if (newUrl) {
+          user.avatar.url = newUrl;
+          user.avatar.urlExpiry = new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          );
+          user?.save();
+        }
+        return newUrl;
+      }
+    } else {
       const newUrl = await aws.getPreSignedUrl(key);
+      user.avatar.url = newUrl;
+      user.avatar.urlExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      user?.save();
       return newUrl;
     }
   }
+
   return null;
 };
 
@@ -133,4 +149,5 @@ module.exports = {
   doUserExist,
   checkPasswordReset,
   verifyToken,
+  generateAvatarUrl,
 };

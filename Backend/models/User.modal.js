@@ -1,4 +1,5 @@
 const { default: mongoose } = require("mongoose");
+const { generateAvatarUrl } = require("../services/user.services");
 
 const UserSchema = new mongoose.Schema(
   {
@@ -56,20 +57,16 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-UserSchema.methods.checkAvatar = async function ()  {
-  const newUrl = await generateAvatarUrl(this);
-  if(newUrl) {
-    this.avatar.url = newUrl;
-    await this.save();
-  }
-}
+UserSchema.methods.checkAvatar = async function () {
+  await generateAvatarUrl(this);
+};
 
 UserSchema.set("toJSON", {
   virtuals: true,
   versionKey: false,
   transform: function (doc, ret) {
     ret.avatar = ret?.avatar?.url || null;
-    
+
     delete ret["password"];
     delete ret._id;
     delete ret.resetPasswordToken;
