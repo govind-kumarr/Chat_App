@@ -108,6 +108,8 @@ const verifyToken = async (token) => {
 };
 
 const generateAvatarUrl = async (user) => {
+  console.log("user", user);
+
   const { avatar } = user || {};
   if (!avatar) return null;
   const { url, key, urlExpiry } = avatar || {};
@@ -123,7 +125,6 @@ const generateAvatarUrl = async (user) => {
           user.avatar.urlExpiry = new Date(
             Date.now() + 7 * 24 * 60 * 60 * 1000
           );
-          user?.save();
         }
         return newUrl;
       }
@@ -131,7 +132,6 @@ const generateAvatarUrl = async (user) => {
       const newUrl = await aws.getPreSignedUrl(key);
       user.avatar.url = newUrl;
       user.avatar.urlExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      user?.save();
       return newUrl;
     }
   }

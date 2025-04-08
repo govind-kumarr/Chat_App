@@ -54,6 +54,34 @@ const geteUserInfo = () => {
   });
 };
 
+const getUploadUrl = (data) => {
+  return apiClient({
+    url: ROUTES.UPLOAD_FILE.URL,
+    method: ROUTES.UPLOAD_FILE.METHOD,
+    data,
+  });
+};
+
+const changeUploadStatus = (data) => {
+  return apiClient({
+    url: ROUTES.UPDATE_UPLOAD_STATUS.URL,
+    method: ROUTES.UPDATE_UPLOAD_STATUS.METHOD,
+    data,
+  });
+};
+
+const uploadFile = (url, data, mimeType) => {
+  return apiClient({
+    baseURL: url,
+    method: "PUT",
+    headers: {
+      "Content-Type": mimeType,
+    },
+    data,
+    withCredentials: false,
+  });
+};
+
 export {
   loginUser,
   registerUser,
@@ -62,4 +90,7 @@ export {
   geteUserInfo,
   forgotPassword,
   resetPassword,
+  changeUploadStatus,
+  uploadFile,
+  getUploadUrl,
 };

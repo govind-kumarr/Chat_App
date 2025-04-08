@@ -18,7 +18,8 @@ const ChatListItem = ({ chat }) => {
   const {
     chat: { activeChat },
   } = useSelector((state) => state);
-  const { username, email, isActive, id } = chat || {};
+
+  const { username, email, isActive, id, avatar, lastActive = "" } = chat || {};
 
   return (
     <>
@@ -33,10 +34,7 @@ const ChatListItem = ({ chat }) => {
           sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
         >
           <Stack direction="row" spacing={1.5}>
-            <AvatarWithStatus
-              online={isActive}
-              src={"/static/images/avatar/2.jpg"}
-            />
+            <AvatarWithStatus online={isActive} src={avatar} />
             <Box sx={{ flex: 1 }}>
               <Typography level="title-sm">{username}</Typography>
               <Typography level="body-sm">{email}</Typography>

@@ -68,6 +68,8 @@ const isIsoString = (str) => {
   return new Date(str).toISOString() === str;
 };
 
+const oneWeekAhead = () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
 module.exports = {
   getUserFromGoogleRes,
   prepareSessionData,
@@ -77,5 +79,6 @@ module.exports = {
   constructResetPasswordLink,
   getStorageKey,
   parseObjectId,
-  isIsoString
+  isIsoString,
+  oneWeekAhead,
 };

@@ -18,7 +18,7 @@ const Messages = () => {
     user: { user },
     chat: { activeChat, chats },
   } = useSelector((state) => state);
-  console.log({ user, chats, activeChat });
+  // console.log({ user, chats, activeChat });
 
   useEffect(() => {
     SocketService.connect();

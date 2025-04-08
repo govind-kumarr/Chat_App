@@ -1,4 +1,5 @@
-import * as React from "react";
+import { useRef, useState } from "react";
+
 import GlobalStyles from "@mui/joy/GlobalStyles";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
@@ -11,17 +12,103 @@ import BrightnessAutoRoundedIcon from "@mui/icons-material/BrightnessAutoRounded
 
 import ColorSchemeToggle from "./ColorSchemeToggle";
 import { closeSidebar } from "../utils";
-import { logoutUser } from "../api/actions";
+import {
+  changeUploadStatus,
+  getUploadUrl,
+  logoutUser,
+  uploadFile,
+} from "../api/actions";
 import { useNavigate } from "react-router-dom";
 import SidebarList from "./sidebar-list";
 import { useSelector } from "react-redux";
 import useAppMutation from "../hooks/useAppMutation";
+import { Button, Modal, ModalClose, Stack, styled } from "@mui/joy";
+import { useQueryClient } from "@tanstack/react-query";
+import VisuallyHiddenInput from "./VisuallyHiddenInput";
 
 export default function Sidebar() {
+  const inputRef = useRef(null);
+
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState(null);
+  const [image, setImage] = useState(null);
+
+  const queryClient = useQueryClient();
+
   const navigate = useNavigate();
+  const {
+    mutateAsync: uploadFileMutate,
+    data: uploadFileResponse,
+    isPending: uploadFilePending,
+  } = useAppMutation({
+    mutationFn: getUploadUrl,
+    mutationKey: "getUploadUrl",
+  });
+
+  const {
+    mutateAsync: changeUploadStatusMutate,
+    isPending: uploadStatusPending,
+  } = useAppMutation({
+    mutationFn: changeUploadStatus,
+    mutationKey: "changeUploadStatus",
+  });
+
+  const isUploading = uploadFilePending || uploadStatusPending;
+
   const {
     user: { user = {} },
   } = useSelector((state) => state);
+  const { avatar, username, email } = user || {};
+
+  const handleFileSelect = (e) => {
+    const [file] = e.target.files;
+    if (file) {
+      setFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImage(reader.result);
+        setOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleClose = () => {
+    setFile(null);
+    setImage(null);
+    setOpen(false);
+  };
+
+  const handleFileClick = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    await uploadFileMutate({
+      fileName: file?.name,
+      size: file?.size,
+      type: "avatar",
+      mimeType: file?.type,
+    });
+    const { url, fileId } = uploadFileResponse?.data;
+    const res = await uploadFile(url, file);
+    if (res.status === 200) {
+      await changeUploadStatusMutate(
+        { fileId },
+        {
+          onSuccess: () => {
+            queryClient.refetchQueries({
+              queryKey: ["geteUserInfo"],
+              exact: false,
+            });
+          },
+        }
+      );
+    }
+    handleClose();
+  };
 
   const { mutate: logoutMutate, isPending: isLoggingOut } = useAppMutation({
     mutationFn: logoutUser,
@@ -98,14 +185,28 @@ export default function Sidebar() {
       <SidebarList />
       <Divider />
       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-        <Avatar
-          variant="outlined"
-          size="sm"
-          src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286"
-        />
+        <Box
+          sx={{
+            backgroundColor: "grey",
+            borderRadius: "9999px",
+            "&:hover": {
+              opacity: 0.4,
+              cursor: "pointer",
+            },
+          }}
+          onClick={handleFileClick}
+        >
+          <Avatar variant="outlined" size="sm" src={avatar} />
+          <VisuallyHiddenInput
+            type="file"
+            ref={inputRef}
+            accept="image/*"
+            onChange={handleFileSelect}
+          />
+        </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography level="title-sm">{user?.username || ""}</Typography>
-          <Typography level="body-xs">{user?.email || ""}</Typography>
+          <Typography level="title-sm">{username || ""}</Typography>
+          <Typography level="body-xs">{email || ""}</Typography>
         </Box>
         <IconButton
           size="sm"
@@ -117,6 +218,48 @@ export default function Sidebar() {
           <LogoutRoundedIcon />
         </IconButton>
       </Box>
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+      >
+        <Sheet
+          variant="outlined"
+          sx={{ maxWidth: 500, borderRadius: "md", p: 3, boxShadow: "lg" }}
+        >
+          <ModalClose variant="plain" sx={{ m: 1 }} />
+          <Stack gap={1}>
+            <Typography
+              component="h2"
+              id="modal-title"
+              level="h4"
+              textColor="inherit"
+              sx={{ fontWeight: "lg", mb: 1 }}
+            >
+              Upload Avatar
+            </Typography>
+            <img src={image} />
+            <Stack
+              direction={"row"}
+              justifyContent={"space-between"}
+              fullWidth
+              gap={5}
+            >
+              <Button fullWidth onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button
+                fullWidth
+                onClick={() => handleFileUpload(file)}
+                disabled={isUploading}
+              >
+                Update
+              </Button>
+            </Stack>
+          </Stack>
+        </Sheet>
+      </Modal>
     </Sheet>
   );
 }

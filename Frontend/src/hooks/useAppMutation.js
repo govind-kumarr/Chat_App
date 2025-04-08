@@ -15,6 +15,7 @@ const useAppMutation = ({ mutationFn, mutationKey, ...config }) => {
         })
       );
       if (config?.onSuccess) config?.onSuccess(response);
+      return response;
     },
     onError: (error) => {
       console.log({ error });

@@ -45,7 +45,7 @@ class SocketManager {
     this.socket.on("add-message", async (data, cb) => {
       try {
         const res = await addMessage(userId, data);
-        cb({ message: "Message added successfully", data: "res" });
+        cb({ message: "Message added successfully", data: res });
         this.sendNewMessage(res);
       } catch (error) {
         console.log(`Error: ${error?.message}`);

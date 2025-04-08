@@ -27,4 +27,12 @@ export const ROUTES = {
     URL: "/api/user/info",
     METHOD: "GET",
   },
+  UPLOAD_FILE: {
+    URL: "/api/file/upload",
+    METHOD: "POST",
+  },
+  UPDATE_UPLOAD_STATUS: {
+    URL: "/api/file/save",
+    METHOD: "POST",
+  },
 };

@@ -1,7 +1,12 @@
 const aws = require("../aws");
 const { MessageModel } = require("../models/Message.modal");
 const { UserModel } = require("../models/User.modal");
-const { toObjectId, getStorageKey, parseObjectId } = require("../utils");
+const {
+  toObjectId,
+  getStorageKey,
+  parseObjectId,
+  oneWeekAhead,
+} = require("../utils");
 const { createFile } = require("./file.services");
 
 const getChatHistory = async (senderId, recipientId) => {
@@ -71,15 +76,24 @@ const findAndPopulateMessage = async (id) => {
 };
 
 const addMessage = async (senderId, data) => {
-  const { recipientId, content, messageType, type, fileInfo, groupId } =
-    data || {};
+  const {
+    recipientId,
+    content = "",
+    messageType,
+    type,
+    fileInfo = {},
+    groupId,
+  } = data || {};
+  console.log({ data });
 
   if (messageType === "media") {
-    const file = await createFile(fileInfo);
+    const file = await createFile({ ...fileInfo, userId: senderId });
     const message = new MessageModel({
       senderId: toObjectId(senderId),
       type: "media",
       file: toObjectId(file?._id),
+      content: "test",
+      status: "sent",
     });
     await message.save();
     const key = getStorageKey({
@@ -91,9 +105,9 @@ const addMessage = async (senderId, data) => {
       mimeType: fileInfo?.mimeType,
     }); // Modify the mimeType
     file.url = url;
-    file.urlExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    file.urlExpiry = oneWeekAhead();
     await file.save();
-    return { url };
+    return { url, fileId: file?._id };
   }
 
   if (senderId && recipientId && content) {
@@ -102,7 +116,7 @@ const addMessage = async (senderId, data) => {
       content,
     });
     message[type === "group" ? "groupId" : "recipientId"] =
-      type === "group" ? toObjectId(recipientId) : toObjectId(groupId);
+      type === "group" ? toObjectId(groupId) : toObjectId(recipientId);
     await message.save();
     return message;
   }

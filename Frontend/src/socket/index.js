@@ -51,14 +51,8 @@ class SocketService {
     });
   }
 
-  static sendMessage(recipientId, content) {
-    SocketService.socket.emit(
-      "add-message",
-      { recipientId, content },
-      (response) => {
-        console.log({ response });
-      }
-    );
+  static sendMessage(data, cb) {
+    SocketService.socket.emit("add-message", data, cb);
   }
 
   static getChatHistory(chatId) {

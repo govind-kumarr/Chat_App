@@ -10,6 +10,11 @@ const fileSchema = yup.object({
   mimeType: yup.string().required("Mime type is required"),
 });
 
+const saveFileSchema = yup.object({
+  fileId: yup.string().required("File Id is required"),
+});
+
 module.exports = {
   fileSchema,
+  saveFileSchema,
 };

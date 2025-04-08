@@ -5,8 +5,23 @@ import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import React from "react";
 import { toggleMessagesPane } from "../../utils";
+import { useDispatch, useSelector } from "react-redux";
 
 const MessagePanelHeader = () => {
+  const dispatch = useDispatch();
+  const {
+    chat: { activeChat, chats },
+  } = useSelector((state) => state);
+
+  const {
+    username,
+    email,
+    isActive,
+    avatar,
+    lastActive = "", // Calc duration
+  } = chats.find((c) => c.id === activeChat) || {};
+  console.log({ activeChat });
+
   return (
     <Stack
       direction="row"
@@ -33,10 +48,7 @@ const MessagePanelHeader = () => {
         >
           <ArrowBackIosNewRoundedIcon />
         </IconButton>
-        <Avatar
-          size="lg"
-          src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286"
-        />
+        <Avatar size="lg" src={avatar} />
         <div>
           <Typography
             component="h2"
@@ -49,19 +61,22 @@ const MessagePanelHeader = () => {
                   color="neutral"
                   sx={{ borderRadius: "sm" }}
                   startDecorator={
-                    <CircleIcon sx={{ fontSize: 8 }} color="success" />
+                    <CircleIcon
+                      sx={{ fontSize: 8 }}
+                      color={isActive ? "success" : "disabled"}
+                    />
                   }
                   slotProps={{ root: { component: "span" } }}
                 >
-                  Online
+                  {isActive ? "online" : "offline"}
                 </Chip>
               ) : undefined
             }
             sx={{ fontWeight: "lg", fontSize: "lg" }}
           >
-            {"Test"}
+            {username}
           </Typography>
-          <Typography level="body-sm">{"Test@gmail.com"}</Typography>
+          <Typography level="body-sm">{email}</Typography>
         </div>
       </Stack>
       <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>

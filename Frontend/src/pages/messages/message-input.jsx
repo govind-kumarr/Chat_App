@@ -1,20 +1,41 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import FormControl from "@mui/joy/FormControl";
 import Textarea from "@mui/joy/Textarea";
-import { IconButton, Stack } from "@mui/joy";
+import {
+  IconButton,
+  Modal,
+  ModalClose,
+  Sheet,
+  Stack,
+  Typography,
+} from "@mui/joy";
 
-import FormatBoldRoundedIcon from "@mui/icons-material/FormatBoldRounded";
-import FormatItalicRoundedIcon from "@mui/icons-material/FormatItalicRounded";
-import StrikethroughSRoundedIcon from "@mui/icons-material/StrikethroughSRounded";
-import FormatListBulletedRoundedIcon from "@mui/icons-material/FormatListBulletedRounded";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { useSelector } from "react-redux";
 import { SocketService } from "../../socket";
+import VisuallyHiddenInput from "../../components/VisuallyHiddenInput";
+import { changeUploadStatus, uploadFile } from "../../api/actions";
+import useAppMutation from "../../hooks/useAppMutation";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState(null);
+  const [sending, setSending] = useState(false);
+
+  const inputRef = useRef(null);
+
+  const {
+    mutateAsync: changeUploadStatusMutate,
+    isPending: uploadStatusPending,
+  } = useAppMutation({
+    mutationFn: changeUploadStatus,
+    mutationKey: "changeUploadStatus",
+  });
+
   const {
     chat: { activeChat },
   } = useSelector((state) => state);
@@ -22,8 +43,36 @@ const MessageInput = () => {
     if (!text || !activeChat) {
       return;
     }
-    SocketService.sendMessage(activeChat, text);
+    SocketService.sendMessage({
+      recipientId: activeChat,
+      content: text,
+      recipientId,
+      content,
+      messageType,
+      type,
+      fileInfo,
+      groupId,
+    });
     setText("");
+  };
+
+  const handleFileSelect = (e) => {
+    const [file] = e.target.files;
+    if (file) {
+      setFile(file);
+      setOpen(true);
+    }
+  };
+
+  const handleClose = () => {
+    setFile(null);
+    setOpen(false);
+  };
+
+  const handleFileClick = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
   };
 
   const handleKeyDown = (event) => {
@@ -31,6 +80,30 @@ const MessageInput = () => {
       event.preventDefault();
       handleMessageSend(text);
     }
+  };
+
+  const handleFileSend = (file) => {
+    setSending(true);
+    SocketService.sendMessage(
+      {
+        recipientId: activeChat,
+        messageType: "media",
+        fileInfo: {
+          fileName: file?.name,
+          size: file?.size,
+          type: "",
+          mimeType: file?.type,
+        },
+      },
+      async (res) => {
+        const { data = {} } = res;
+        const { url, fileId } = data;
+        const response = await uploadFile(url, file);
+        if (response.status === 200) {
+          await changeUploadStatusMutate({ fileId });
+        }
+      }
+    );
   };
 
   return (
@@ -58,18 +131,20 @@ const MessageInput = () => {
               }}
             >
               <div>
-                {/* <IconButton size="sm" variant="plain" color="neutral">
-                  <FormatBoldRoundedIcon />
+                <IconButton
+                  size="sm"
+                  variant="plain"
+                  color="neutral"
+                  onClick={handleFileClick}
+                >
+                  <AttachFileIcon />
                 </IconButton>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <FormatItalicRoundedIcon />
-                </IconButton>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <StrikethroughSRoundedIcon />
-                </IconButton>
-                <IconButton size="sm" variant="plain" color="neutral">
-                  <FormatListBulletedRoundedIcon />
-                </IconButton> */}
+                <VisuallyHiddenInput
+                  type="file"
+                  ref={inputRef}
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                />
               </div>
               <Button
                 size="sm"
@@ -90,6 +165,56 @@ const MessageInput = () => {
           }}
         />
       </FormControl>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+      >
+        <Sheet
+          variant="outlined"
+          sx={{ maxWidth: 500, borderRadius: "md", p: 3, boxShadow: "lg" }}
+        >
+          <ModalClose variant="plain" sx={{ m: 2 }} />
+          {file && (
+            <Box
+              sx={{
+                border: "1px solid",
+                borderColor: "neutral.outlinedBorder",
+                borderRadius: "md",
+                padding: 2,
+                backgroundColor: "neutral.softBg",
+                maxWidth: 400,
+              }}
+            >
+              <Typography level="title-md" gutterBottom>
+                File Details
+              </Typography>
+
+              <Stack spacing={1}>
+                <Typography level="body-sm">
+                  <strong>Name:</strong> {file.name}
+                </Typography>
+                <Typography level="body-sm">
+                  <strong>Type:</strong> {file.type}
+                </Typography>
+                <Typography level="body-sm">
+                  <strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB
+                </Typography>
+              </Stack>
+
+              <Box mt={2}>
+                <Button
+                  onClick={() => handleFileSend(file)}
+                  color="primary"
+                  fullWidth
+                >
+                  Send
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </Sheet>
+      </Modal>
     </Box>
   );
 };

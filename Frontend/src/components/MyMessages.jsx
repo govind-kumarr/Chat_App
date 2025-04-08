@@ -13,10 +13,10 @@ export default function MyProfile() {
   useEffect(() => {
     SocketService.connect();
     socketEventEmitter.on("active-users", (data) => {
-      console.log("active-users", { data });
+      // console.log("active-users", { data });
     });
     socketEventEmitter.on("chats", (data) => {
-      console.log("chats", { data });
+      // console.log("chats", { data });
     });
   }, []);
   return (

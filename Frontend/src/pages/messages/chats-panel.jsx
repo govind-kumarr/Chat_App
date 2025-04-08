@@ -93,10 +93,23 @@ export default function ChatsPane() {
           "--ListItem-paddingX": "1rem",
         }}
       >
-        {chats?.length > 0 &&
+        {chats?.length > 1 ? (
           chats
             ?.filter((c) => c?.id != user?.id)
-            ?.map((chat) => <ChatListItem key={chat.id} chat={chat} />)}
+            ?.map((chat) => <ChatListItem key={chat.id} chat={chat} />)
+        ) : (
+          <Box
+            width={"100%"}
+            // height={"100%"}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Typography level="title-sm">No Chats Available</Typography>
+          </Box>
+        )}
       </List>
     </Sheet>
   );
