@@ -46,7 +46,30 @@ const getChatHistory = async (senderId, recipientId) => {
         content: 1,
         status: 1,
         createdAt: 1,
+        file: 1,
         _id: 0,
+      },
+    },
+    {
+      $lookup: {
+        from: "files",
+        let: { fileId: "$file" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [{ $eq: ["$_id", "$$fileId"] }],
+              },
+            },
+          },
+        ],
+        as: "fileDetails",
+      },
+    },
+    {
+      $unwind: {
+        path: "$fileDetails",
+        preserveNullAndEmptyArrays: true,
       },
     },
     {
@@ -72,6 +95,12 @@ const findAndPopulateMessage = async (id) => {
         alias: "recipient",
       },
     })
+    .populate({
+      path: "file",
+      options: {
+        alias: "recipient",
+      },
+    })
     .lean();
 };
 
@@ -84,7 +113,6 @@ const addMessage = async (senderId, data) => {
     fileInfo = {},
     groupId,
   } = data || {};
-  console.log({ data });
 
   if (messageType === "media") {
     const file = await createFile({ ...fileInfo, userId: senderId });
@@ -92,9 +120,11 @@ const addMessage = async (senderId, data) => {
       senderId: toObjectId(senderId),
       type: "media",
       file: toObjectId(file?._id),
-      content: "test",
+      content: fileInfo?.fileName || "---",
       status: "sent",
     });
+    message[type === "group" ? "groupId" : "recipientId"] =
+      type === "group" ? toObjectId(groupId) : toObjectId(recipientId);
     await message.save();
     const key = getStorageKey({
       type: "chat-data",
@@ -105,9 +135,10 @@ const addMessage = async (senderId, data) => {
       mimeType: fileInfo?.mimeType,
     }); // Modify the mimeType
     file.url = url;
+    file.storageKey = key;
     file.urlExpiry = oneWeekAhead();
     await file.save();
-    return { url, fileId: file?._id };
+    return { url, fileId: file?._id, id: message?._id };
   }
 
   if (senderId && recipientId && content) {
@@ -118,7 +149,7 @@ const addMessage = async (senderId, data) => {
     message[type === "group" ? "groupId" : "recipientId"] =
       type === "group" ? toObjectId(groupId) : toObjectId(recipientId);
     await message.save();
-    return message;
+    return { id: message?._id };
   }
 };
 

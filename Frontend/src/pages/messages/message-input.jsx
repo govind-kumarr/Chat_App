@@ -43,16 +43,15 @@ const MessageInput = () => {
     if (!text || !activeChat) {
       return;
     }
-    SocketService.sendMessage({
-      recipientId: activeChat,
-      content: text,
-      recipientId,
-      content,
-      messageType,
-      type,
-      fileInfo,
-      groupId,
-    });
+    SocketService.sendMessage(
+      {
+        recipientId: activeChat,
+        content: text,
+      },
+      (res) => {
+        console.log("Text message sent", res);
+      }
+    );
     setText("");
   };
 
@@ -96,11 +95,19 @@ const MessageInput = () => {
         },
       },
       async (res) => {
-        const { data = {} } = res;
-        const { url, fileId } = data;
-        const response = await uploadFile(url, file);
-        if (response.status === 200) {
-          await changeUploadStatusMutate({ fileId });
+        try {
+          const { data = {} } = res;
+          const { url, fileId } = data;
+          const response = await uploadFile(url, file, file.type);
+          if (response.status === 200) {
+            await changeUploadStatusMutate({ fileId });
+          }
+          console.log("File message sent", res);
+        } catch (error) {
+          console.log(`Error sending file message ${error?.message}`);
+        } finally {
+          setOpen(false);
+          setSending(false);
         }
       }
     );
@@ -142,7 +149,6 @@ const MessageInput = () => {
                 <VisuallyHiddenInput
                   type="file"
                   ref={inputRef}
-                  accept="image/*"
                   onChange={handleFileSelect}
                 />
               </div>

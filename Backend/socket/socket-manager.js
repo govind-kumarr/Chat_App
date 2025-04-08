@@ -46,7 +46,7 @@ class SocketManager {
       try {
         const res = await addMessage(userId, data);
         cb({ message: "Message added successfully", data: res });
-        this.sendNewMessage(res);
+        this.sendNewMessage(res?.id);
       } catch (error) {
         console.log(`Error: ${error?.message}`);
       }
@@ -71,15 +71,19 @@ class SocketManager {
     console.log(`User ${user?.username} disconnected`);
   }
 
-  async sendNewMessage(messages) {
+  async sendNewMessage(messageId) {
     const io = this.io;
-    if (messages && Array.isArray(messages) && messages?.length > 0 && io) {
-      const [message] = messages;
-      const populatedMessage = await findAndPopulateMessage(message?._id);
+    if (messageId && io) {
+      const populatedMessage = await findAndPopulateMessage(messageId);
       populatedMessage["sender"] = populatedMessage.senderId;
       populatedMessage["recipient"] = populatedMessage.recipientId;
       populatedMessage["senderId"] = populatedMessage?.sender?._id;
       populatedMessage["recipientId"] = populatedMessage?.recipient?._id;
+      if (populatedMessage.type === "media") {
+        populatedMessage["fileDetails"] = populatedMessage?.file;
+        populatedMessage["file"] = populatedMessage?.file?._id;
+      }
+
       const sendersSocket = populatedMessage?.sender?.socketId;
       const recieversSocket = populatedMessage?.recipient?.socketId;
       io.to(sendersSocket).emit("new-message", populatedMessage);

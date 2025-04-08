@@ -1,5 +1,9 @@
 import React from "react";
-import { toggleMessagesPane } from "../../utils";
+import {
+  isValidIsoString,
+  timeConversions,
+  toggleMessagesPane,
+} from "../../utils";
 import {
   Box,
   ListDivider,
@@ -19,7 +23,14 @@ const ChatListItem = ({ chat }) => {
     chat: { activeChat },
   } = useSelector((state) => state);
 
-  const { username, email, isActive, id, avatar, lastActive = "" } = chat || {};
+  const {
+    username,
+    email,
+    isActive,
+    id,
+    avatar,
+    lastActiveAt = "",
+  } = chat || {};
 
   return (
     <>
@@ -48,7 +59,9 @@ const ChatListItem = ({ chat }) => {
                 noWrap
                 sx={{ display: { xs: "none", md: "block" } }}
               >
-                5 mins ago
+                {isValidIsoString(lastActiveAt)
+                  ? timeConversions(new Date(lastActiveAt).getTime())
+                  : null}
               </Typography>
             </Box>
           </Stack>

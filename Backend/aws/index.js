@@ -72,6 +72,7 @@ class AWS_Setup {
   }
 
   async getPreSignedUrl(key) {
+    if (!key) throw new Error(`Object Unique Key is missing!`);
     const bucket = this.bucket;
     const client = this.client;
     const options = {
@@ -86,6 +87,8 @@ class AWS_Setup {
   }
 
   async generateUploadUrl(key, options = {}) {
+    if (!key) throw new Error(`Object Unique Key is missing!`);
+
     const bucket = this.bucket;
     const client = this.client;
     const command = new PutObjectCommand({
