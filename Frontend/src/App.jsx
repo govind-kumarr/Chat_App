@@ -1,28 +1,67 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Messanger from "./components/Messanger";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import Authentcation from "./pages/authentication";
+import RootLayout from "./layout";
+import { CssVarsProvider } from "@mui/joy/styles";
+import CssBaseline from "@mui/joy/CssBaseline";
+import SnackbarComp from "./components/SnackbarComp";
+import AuthLayout from "./layout/auth.layout";
+import AuthRedirect from "./layout/auth-redirect";
+import UserProvider from "./layout/user-provider";
+import Messages from "./pages/messages";
+import ForgotPassword from "./pages/authentication/forgot-password";
 
 function App() {
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: (
+        <AuthLayout>
+          <UserProvider>
+            <RootLayout />
+          </UserProvider>
+        </AuthLayout>
+      ),
+      children: [
+        {
+          index: true,
+          id: "home",
+          element: <Messages />,
+        },
+        {
+          path: "messages",
+          id: "messages",
+          element: <Messages />,
+        },
+      ],
+    },
+    {
+      path: "/auth",
+      element: (
+        <AuthRedirect>
+          <Authentcation />
+        </AuthRedirect>
+      ),
+      id: "auth",
+    },
+    // {
+    //   path: "/auth/forgot-password/:resetPasswordToken",
+    //   element: <ForgotPassword />,
+    //   id: "forgot-password-token",
+    // },
+    {
+      path: "/auth/forgot-password",
+      element: <ForgotPassword />,
+      id: "forgot-password",
+    },
+  ]);
+
   return (
-    <div>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Messanger />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/messanger/login" element={<Login />} />
-          <Route path="/messanger/register" element={<Register />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <CssVarsProvider disableTransitionOnChange>
+      <CssBaseline />
+      <SnackbarComp />
+      <RouterProvider router={router} />
+    </CssVarsProvider>
   );
 }
 

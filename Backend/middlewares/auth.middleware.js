@@ -1,19 +1,27 @@
-const { verifyJwt } = require("../utils/jwt.utils");
+const { SessionModel } = require("../models/Session.modal");
+const { UserModel } = require("../models/User.modal");
 
 const validateSession = async (req, res, next) => {
-  const accessToken = req.cookies.accessToken;
-  if (accessToken) {
-    const { decoded, valid } = verifyJwt(accessToken);
-    if (decoded && valid) {
-      req.locals = {
-        user: false,
-      };
-      req.locals.user = decoded;
+  try {
+    const sessionId = req.cookies.chat_app_sid;
+    const session = await SessionModel.findById(sessionId);
+    if (session) {
+      const user = await UserModel.findById(session?.user);
+      if (user) {
+        req.locals = { user };
+        return next();
+      }
+      throw new Error("User not found");
+    } else {
+      console.log("token not present");
+      throw new Error("Session not found");
     }
-    return next();
-  } else {
-    console.log("token not present");
-    return next();
+  } catch (error) {
+    res.status(401).json({
+      authenticated: false,
+      message: error.message || "Something went wrong",
+    });
+    return;
   }
 };
 

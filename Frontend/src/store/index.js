@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./auth/auth";
-import messangerReducer from "./messanger/messanger";
+import snackbarReducer from "./snackbar";
+import userReducer from "./user";
+import chatReducer from "./chat";
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
-    auth: authReducer,
-    messanger: messangerReducer,
+    snackbar: snackbarReducer,
+    user: userReducer,
+    chat: chatReducer,
   },
 });
-
-export { store };

@@ -1,14 +1,10 @@
 const { Router } = require("express");
-const {
-  getAvatar,
-  uploadFile,
-  downloadFile,
-} = require("../controllers/file.controller");
+const { uploadUrl, saveFile } = require("../controllers/file.controller");
+const { validateRequest } = require("../middlewares/validate-request");
+const { fileSchema, saveFileSchema } = require("../validators/file-validators");
 
 const router = Router();
-
-router.get("/getFile/:fileName", downloadFile);
-router.get("/avatar/*", getAvatar);
-router.post("/upload", uploadFile);
+router.post("/upload", validateRequest(fileSchema), uploadUrl);
+router.post("/save", validateRequest(saveFileSchema), saveFile);
 
 module.exports = router;
