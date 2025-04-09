@@ -3,6 +3,8 @@ const {
   getSocket,
   addMessage,
   findAndPopulateMessage,
+  prepareChats,
+  createChat,
 } = require("../services/chat.services");
 const { getAllUsers, changeStatus } = require("../services/user.services");
 const { toObjectId } = require("../utils");
@@ -34,12 +36,19 @@ class SocketManager {
     const socket = this.socket;
     const user = socket?.locals?.user;
     const userId = user?.id;
+    this.socket.on("create-chat", async (data, cb) => {
+      try {
+        const { participants, type, name, description } = data; // Handle group name description here
+        const chat = await createChat(type, participants);
+        cb({ message: "Chat created successfully", chatId: chat._id });
+      } catch (error) {}
+    });
     this.socket.on("get-chats", async (cb) => {
-      const chats = await getAllUsers();
+      const chats = await prepareChats();
       return cb({ chats });
     });
     this.socket.on("get-chat-history", async (chatId, cb) => {
-      const chat = await getChatHistory(userId, chatId);
+      const chat = await getChatHistory(chatId);
       return cb({ chat });
     });
     this.socket.on("add-message", async (data, cb) => {
