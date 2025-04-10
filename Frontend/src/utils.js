@@ -120,7 +120,6 @@ export const timeConversions = (time = 0) => {
   let parsedTime = "";
 
   const currentTime = Date.now();
-  console.log(time, currentTime);
 
   if (time > currentTime) return parsedTime;
 
@@ -133,7 +132,10 @@ export const timeConversions = (time = 0) => {
     } else if (diff >= oneMinute) {
       const minutes = Math.floor(diff / oneMinute);
       parsedTime = `${minutes} ${minutes > 1 ? "minutes" : "minute"} ago`;
-    } else parsedTime = `${diff} ${diff > 1 ? "seconds" : "second"}  ago`;
+    } else {
+      const seconds = Math.floor(diff / oneSec);
+      parsedTime = `${seconds} ${seconds > 1 ? "seconds" : "second"}  ago`;
+    }
   }
 
   return parsedTime;

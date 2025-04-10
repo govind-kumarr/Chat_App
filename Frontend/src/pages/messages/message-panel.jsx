@@ -14,7 +14,7 @@ const MessagePanel = () => {
   } = useSelector((state) => state);
   const groupedMessages = getGroupMessages(activeChatMessages);
 
-  console.log({ selectedUser, activeChat });
+  console.log({ activeChat });
 
   return (
     <Sheet
@@ -39,16 +39,16 @@ const MessagePanel = () => {
               flexDirection: "column-reverse",
             }}
           >
-            <Stack spacing={2} sx={{ justifyContent: "flex-end" }}>
-              {Object.keys(groupedMessages).length > 0 &&
-                Object.keys(groupedMessages).map((date) => {
+            {Object.keys(groupedMessages).length > 0 ? (
+              <Stack spacing={2} sx={{ justifyContent: "flex-end" }}>
+                {Object.keys(groupedMessages).map((date) => {
                   const messages = groupedMessages[date];
                   return (
                     <>
                       <Divider>{date}</Divider>
                       {messages?.length > 0 &&
                         messages.map((message, index) => {
-                          const { sender } = message;
+                          const { isActive, avatar, senderName } = message;
                           const isYou = message?.senderId === user?.id;
                           return (
                             <Stack
@@ -61,14 +61,14 @@ const MessagePanel = () => {
                             >
                               {!isYou && (
                                 <AvatarWithStatus
-                                  online={sender.isActive}
-                                  src={sender.avatar}
+                                  online={isActive}
+                                  src={avatar}
                                 />
                               )}
                               <ChatBubble
                                 variant={isYou ? "sent" : "received"}
                                 {...message}
-                                sender={isYou ? "You" : sender}
+                                sender={isYou ? "You" : senderName}
                               />
                             </Stack>
                           );
@@ -76,7 +76,20 @@ const MessagePanel = () => {
                     </>
                   );
                 })}
-            </Stack>
+              </Stack>
+            ) : (
+              <Stack
+                spacing={2}
+                sx={{
+                  justifyContent: "center",
+                  width: "100%",
+                  height: "100%",
+                  alignItems: "center",
+                }}
+              >
+                <Typography level="title-lg">No Messages</Typography>
+              </Stack>
+            )}
           </Box>
           <MessageInput />
         </>

@@ -37,23 +37,31 @@ const MessageInput = () => {
   });
 
   const {
-    chat: { activeChat, selectedUser },
+    chat: { activeChat, chats },
   } = useSelector((state) => state);
   const handleMessageSend = (text) => {
-    if (!text || (!activeChat && !selectedUser)) {
+    if (!text || !activeChat) {
       return;
     }
+    setSending(true);
 
-    SocketService.sendMessage(
-      {
-        recipientId: selectedUser,
+    const chat = chats.find((c) => c.id === activeChat);
+    if (chat) {
+      const { type } = chat;
+      const sendMessagePayload = {
         content: text,
-      },
-      (res) => {
+        type,
+        ...(type === "user"
+          ? { recipientId: activeChat }
+          : { chatId: activeChat }),
+      };
+
+      SocketService.sendMessage(sendMessagePayload, (res) => {
         console.log("Text message sent", res);
-      }
-    );
-    setText("");
+        setSending(false);
+      });
+      setText("");
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -84,34 +92,38 @@ const MessageInput = () => {
 
   const handleFileSend = (file) => {
     setSending(true);
-    SocketService.sendMessage(
-      {
-        recipientId: activeChat,
-        messageType: "media",
-        fileInfo: {
-          fileName: file?.name,
-          size: file?.size,
-          type: "",
-          mimeType: file?.type,
+    const chat = chats.find((c) => c.id === activeChat);
+    if (chat) {
+      const { type } = chat;
+      SocketService.sendMessage(
+        {
+          [type === "user" ? "recipientId" : "chatId"]: activeChat,
+          messageType: "media",
+          fileInfo: {
+            fileName: file?.name,
+            size: file?.size,
+            type: "",
+            mimeType: file?.type,
+          },
         },
-      },
-      async (res) => {
-        try {
-          const { data = {} } = res;
-          const { url, fileId } = data;
-          const response = await uploadFile(url, file, file.type);
-          if (response.status === 200) {
-            await changeUploadStatusMutate({ fileId });
+        async (res) => {
+          try {
+            const { data = {} } = res;
+            const { url, fileId } = data;
+            const response = await uploadFile(url, file, file.type);
+            if (response.status === 200) {
+              await changeUploadStatusMutate({ fileId });
+            }
+            console.log("File message sent", res);
+          } catch (error) {
+            console.log(`Error sending file message ${error?.message}`);
+          } finally {
+            setOpen(false);
+            setSending(false);
           }
-          console.log("File message sent", res);
-        } catch (error) {
-          console.log(`Error sending file message ${error?.message}`);
-        } finally {
-          setOpen(false);
-          setSending(false);
         }
-      }
-    );
+      );
+    }
   };
 
   return (
@@ -159,7 +171,7 @@ const MessageInput = () => {
                 sx={{ alignSelf: "center", borderRadius: "sm" }}
                 endDecorator={<SendRoundedIcon />}
                 onClick={() => handleMessageSend(text)}
-                disabled={!text}
+                disabled={!text || sending}
               >
                 Send
               </Button>
@@ -213,6 +225,7 @@ const MessageInput = () => {
                 <Button
                   onClick={() => handleFileSend(file)}
                   color="primary"
+                  disabled={sending}
                   fullWidth
                 >
                   Send

@@ -24,7 +24,7 @@ class SocketManager {
       if (socket) {
         const user = socket?.locals?.user;
         await changeStatus(user.id, true, socket.id);
-        this.sendChats();
+        this.sendChats(socket.id);
         this.attachListeners();
       }
     } catch (error) {
@@ -38,15 +38,15 @@ class SocketManager {
     const userId = user?.id;
     this.socket.on("create-chat", async (data, cb) => {
       try {
-        const { participants, type, name, description } = data; // Handle group name description here
+        const { participants, type, name, description } = data || {}; // Handle group name description here
         const chat = await createChat(type, participants);
         cb({ message: "Chat created successfully", chatId: chat._id });
       } catch (error) {}
     });
     this.socket.on("get-chats", async (cb) => {
-      const chats = await prepareChats();
-      const users = await getAllUsers();
-      return cb({ chats, users });
+      console.log("userid", { userId });
+      const chats = await prepareChats(userId);
+      return cb({ chats });
     });
     this.socket.on("get-chat-history", async (chatId, cb) => {
       const chat = await getChatHistory(chatId);
@@ -67,20 +67,22 @@ class SocketManager {
 
   async handleDisconnecting() {
     try {
+      // Currently send complete chats again on disconnect Improve this to send just a signal of disconnecting user
       const user = this.socket?.locals?.user;
       const userId = user.id;
       await changeStatus(userId, false, "");
-      this.sendChats();
+      // this.sendChats();
     } catch (error) {
       console.log(`Error: ${error?.message}`);
     }
   }
 
   async handleDisconnect() {
+    // Currently send complete chats again on disconnect Improve this to send just a signal of disconnecting user
     const user = this.socket?.locals?.user;
     const userId = user.id;
     await changeStatus(userId, false, "");
-    this.sendChats();
+    // this.sendChats();
     console.log(`User ${user?.username} disconnected`);
   }
 
@@ -104,11 +106,12 @@ class SocketManager {
     }
   }
 
-  async sendChats() {
+  async sendChats(socketId) {
     const io = this.io;
-    const chats = await prepareChats();
-    const users = await getAllUsers();
-    io.emit("chats", { chats, users });
+    const user = this.socket?.locals?.user;
+    const userId = user.id;
+    const chats = await prepareChats(userId);
+    if (socketId) io.to(socketId).emit("chats", { chats });
   }
 
   async sendChatHistory(senderId, recipientId) {

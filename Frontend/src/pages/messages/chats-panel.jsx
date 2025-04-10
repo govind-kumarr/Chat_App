@@ -10,10 +10,11 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useSelector } from "react-redux";
 import UserListItem from "./user-list-item";
 import { toggleMessagesPane } from "../../utils";
+import ChatListItem from "./chat-list-item";
 
 export default function ChatsPane() {
   const {
-    chat: { chats = [], users = [] },
+    chat: { chats = [] },
     user: { user = {} },
   } = useSelector((state) => state);
 
@@ -93,13 +94,12 @@ export default function ChatsPane() {
           "--ListItem-paddingX": "1rem",
         }}
       >
-        {/* Render Chat */}
-
-        {/* Render Users */}
-        {users?.length > 1 &&
-          users
-            ?.filter((c) => c?.id != user?.id)
-            ?.map((user) => <UserListItem key={user.id} user={user} />)}
+        {chats?.length > 0 &&
+          chats?.map((chat) => {
+            const { type, id } = chat;
+            if (type === "user") return <UserListItem key={id} user={chat} />;
+            return <ChatListItem key={id} chat={chat} />;
+          })}
       </List>
     </Sheet>
   );

@@ -16,11 +16,8 @@ import AvatarWithStatus from "../../components/AvatarWithStatus";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveChat } from "../../store/chat";
 
-const UserListItem = ({ user }) => {
+const ChatListItem = ({ chat }) => {
   const dispatch = useDispatch();
-  const {
-    chat: { activeChat },
-  } = useSelector((state) => state);
 
   const {
     name,
@@ -30,7 +27,13 @@ const UserListItem = ({ user }) => {
     avatar,
     lastActiveAt = "",
     type,
-  } = user || {};
+    lastMessageAt = "",
+    lastMessageType = "",
+    lastMessageContent = "",
+  } = chat || {};
+  const {
+    chat: { activeChat },
+  } = useSelector((state) => state);
 
   return (
     <>
@@ -48,24 +51,28 @@ const UserListItem = ({ user }) => {
             <AvatarWithStatus online={isActive} src={avatar} />
             <Box sx={{ flex: 1 }}>
               <Typography level="title-sm">{name}</Typography>
-              {/* <Typography level="body-sm">{email}</Typography> */}
+              <Typography level="body-sm" whiteSpace={"nowrap"}>
+                {lastMessageContent?.length > 20
+                  ? `${lastMessageContent.slice(0, 18)}...`
+                  : lastMessageContent}
+              </Typography>
             </Box>
             <Box sx={{ lineHeight: 1.5, textAlign: "right" }}>
               {/* {messages[0].unread && (
-                <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-              )} */}
+            <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+          )} */}
               <Typography
                 level="body-xs"
                 noWrap
                 sx={{ display: { xs: "none", md: "block" } }}
               >
-                {isValidIsoString(lastActiveAt)
-                  ? timeConversions(new Date(lastActiveAt).getTime())
+                {lastMessageAt && isValidIsoString(lastMessageAt)
+                  ? timeConversions(new Date(lastMessageAt).getTime())
                   : null}
               </Typography>
             </Box>
           </Stack>
-          {/* TODO: <Typography
+          {/* <Typography
             level="body-sm"
             sx={{
               display: "-webkit-box",
@@ -75,7 +82,7 @@ const UserListItem = ({ user }) => {
               textOverflow: "ellipsis",
             }}
           >
-            {"This is test message"}
+            {lastMessageContent || "abc"}
           </Typography> */}
         </ListItemButton>
       </ListItem>
@@ -84,4 +91,4 @@ const UserListItem = ({ user }) => {
   );
 };
 
-export default UserListItem;
+export default ChatListItem;

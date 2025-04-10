@@ -7,8 +7,7 @@ import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
 import CelebrationOutlinedIcon from "@mui/icons-material/CelebrationOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import { checkFileType, getFormattedDate, sizeConversions } from "../utils";
-import { fileTypeMap } from "../constants";
+import { getFormattedDate } from "../utils";
 import FileDetails from "./file-details";
 
 export default function ChatBubble(props) {
@@ -25,9 +24,9 @@ export default function ChatBubble(props) {
         spacing={2}
         sx={{ justifyContent: "space-between", mb: 0.25 }}
       >
-        {/* <Typography level="body-xs">
-          {sender === "You" ? sender : sender?.username}
-        </Typography> */}
+        <Typography level="body-xs">
+          {sender === "You" ? sender : sender}
+        </Typography>
         <Typography level="body-xs">
           {getFormattedDate(createdAt, "HH:MM A")}
         </Typography>
