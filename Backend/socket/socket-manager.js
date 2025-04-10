@@ -76,8 +76,11 @@ class SocketManager {
     }
   }
 
-  handleDisconnect() {
+  async handleDisconnect() {
     const user = this.socket?.locals?.user;
+    const userId = user.id;
+    await changeStatus(userId, false, "");
+    this.sendChats();
     console.log(`User ${user?.username} disconnected`);
   }
 
