@@ -9,6 +9,7 @@ import {
   setActiveChat,
   setChatMessages,
   setChats,
+  setUsers,
 } from "../../store/chat";
 import MessagePanel from "./message-panel";
 
@@ -25,6 +26,7 @@ const Messages = () => {
 
     socketEventEmitter.on("chats", (data) => {
       dispatch(setChats(data?.chats));
+      dispatch(setUsers(data?.users));
     });
 
     socketEventEmitter.on("chat-history", (data) => {
@@ -63,7 +65,6 @@ const Messages = () => {
     >
       <ChatsPanel />
       <MessagePanel />
-      {/* <MessagesPane chat={selectedChat} /> */}
     </Sheet>
   );
 };

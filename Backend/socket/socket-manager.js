@@ -45,7 +45,8 @@ class SocketManager {
     });
     this.socket.on("get-chats", async (cb) => {
       const chats = await prepareChats();
-      return cb({ chats });
+      const users = await getAllUsers();
+      return cb({ chats, users });
     });
     this.socket.on("get-chat-history", async (chatId, cb) => {
       const chat = await getChatHistory(chatId);
@@ -102,8 +103,9 @@ class SocketManager {
 
   async sendChats() {
     const io = this.io;
-    const chats = await getAllUsers();
-    io.emit("chats", { chats });
+    const chats = await prepareChats();
+    const users = await getAllUsers();
+    io.emit("chats", { chats, users });
   }
 
   async sendChatHistory(senderId, recipientId) {

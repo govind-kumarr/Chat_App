@@ -4,7 +4,7 @@ const ChatSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["text", "media"],
+      enum: ["group", "personal"],
       default: "personal",
       required: true,
     },
@@ -16,7 +16,6 @@ const ChatSchema = new mongoose.Schema(
     },
     name: {
       type: String,
-      required: true,
       default: "personal",
     },
     lastMessage: {

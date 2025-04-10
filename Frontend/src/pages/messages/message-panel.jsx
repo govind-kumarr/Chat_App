@@ -10,9 +10,11 @@ import { getGroupMessages } from "../../utils";
 const MessagePanel = () => {
   const {
     user: { user },
-    chat: { activeChat, activeChatMessages },
+    chat: { activeChat, activeChatMessages, selectedUser },
   } = useSelector((state) => state);
   const groupedMessages = getGroupMessages(activeChatMessages);
+
+  console.log({ selectedUser, activeChat });
 
   return (
     <Sheet
@@ -23,7 +25,7 @@ const MessagePanel = () => {
         backgroundColor: "background.level1",
       }}
     >
-      {activeChat ? (
+      {activeChat || selectedUser ? (
         <>
           <MessagesPaneHeader />
           <Box
@@ -38,7 +40,7 @@ const MessagePanel = () => {
             }}
           >
             <Stack spacing={2} sx={{ justifyContent: "flex-end" }}>
-              {activeChat &&
+              {Object.keys(groupedMessages).length > 0 &&
                 Object.keys(groupedMessages).map((date) => {
                   const messages = groupedMessages[date];
                   return (

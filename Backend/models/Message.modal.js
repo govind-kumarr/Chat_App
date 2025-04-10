@@ -20,7 +20,6 @@ const MessageSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ["text", "media"],
-      required: true,
       default: "text",
     },
     content: {
@@ -31,7 +30,7 @@ const MessageSchema = new mongoose.Schema(
     file: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,
-      ref: "files"
+      ref: "files",
     },
     status: {
       type: String,

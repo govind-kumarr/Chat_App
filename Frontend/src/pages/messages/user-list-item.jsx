@@ -13,11 +13,10 @@ import {
   Typography,
 } from "@mui/joy";
 import AvatarWithStatus from "../../components/AvatarWithStatus";
-import CircleIcon from "@mui/icons-material/Circle";
 import { useDispatch, useSelector } from "react-redux";
-import { setActiveChat } from "../../store/chat";
+import { setSelectedUser } from "../../store/chat";
 
-const ChatListItem = ({ chat }) => {
+const UserListItem = ({ user }) => {
   const dispatch = useDispatch();
   const {
     chat: { activeChat },
@@ -30,7 +29,7 @@ const ChatListItem = ({ chat }) => {
     id,
     avatar,
     lastActiveAt = "",
-  } = chat || {};
+  } = user || {};
 
   return (
     <>
@@ -38,7 +37,7 @@ const ChatListItem = ({ chat }) => {
         <ListItemButton
           onClick={() => {
             toggleMessagesPane();
-            dispatch(setActiveChat(id));
+            dispatch(setSelectedUser(id));
           }}
           selected={activeChat === id}
           color="neutral"
@@ -84,4 +83,4 @@ const ChatListItem = ({ chat }) => {
   );
 };
 
-export default ChatListItem;
+export default UserListItem;

@@ -162,8 +162,8 @@ const createChat = async (type, participants) => {
 };
 
 const findChat = async (filter) => {
-  if (type === "personal") {
-    const chat = await ChatModel.find({
+  if (filter?.type === "personal") {
+    const chat = await ChatModel.findOne({
       type: filter.type,
       participants: { $size: 2, $all: filter.participants },
     });
@@ -201,12 +201,12 @@ const findAndPopulateMessage = async (id) => {
 
 const addMessage = async (senderId, data) => {
   const {
-    recipientId,
+    recipientId = "",
     content = "",
-    messageType,
-    type,
+    messageType = "",
+    type = "",
     fileInfo = {},
-    chatId,
+    chatId = "",
   } = data || {};
 
   const message = new MessageModel({
@@ -214,6 +214,7 @@ const addMessage = async (senderId, data) => {
     status: "sent",
     recipientId: toObjectId(recipientId),
   });
+  console.log({ chatId, type });
 
   if (chatId) {
     message.chatId = chatId;
@@ -229,6 +230,8 @@ const addMessage = async (senderId, data) => {
           toObjectId(recipientId),
         ]);
       }
+      console.log({ chat });
+
       message.chatId = chat?._id;
     }
   }

@@ -37,15 +37,16 @@ const MessageInput = () => {
   });
 
   const {
-    chat: { activeChat },
+    chat: { activeChat, selectedUser },
   } = useSelector((state) => state);
   const handleMessageSend = (text) => {
-    if (!text || !activeChat) {
+    if (!text || (!activeChat && !selectedUser)) {
       return;
     }
+
     SocketService.sendMessage(
       {
-        recipientId: activeChat,
+        recipientId: selectedUser,
         content: text,
       },
       (res) => {

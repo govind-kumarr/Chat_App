@@ -22,7 +22,14 @@ import { useNavigate } from "react-router-dom";
 import SidebarList from "./sidebar-list";
 import { useSelector } from "react-redux";
 import useAppMutation from "../hooks/useAppMutation";
-import { Button, Modal, ModalClose, Stack, styled } from "@mui/joy";
+import {
+  Button,
+  CircularProgress,
+  Modal,
+  ModalClose,
+  Stack,
+  styled,
+} from "@mui/joy";
 import { useQueryClient } from "@tanstack/react-query";
 import VisuallyHiddenInput from "./VisuallyHiddenInput";
 
@@ -37,9 +44,9 @@ export default function Sidebar() {
 
   const navigate = useNavigate();
   const {
-    mutateAsync: uploadFileMutate,
-    data: uploadFileResponse,
-    isPending: uploadFilePending,
+    mutateAsync: getUploadUrlMutate,
+    data: getUploadUrlResponse,
+    isPending: getUploadUrlPending,
   } = useAppMutation({
     mutationFn: getUploadUrl,
     mutationKey: "getUploadUrl",
@@ -53,7 +60,14 @@ export default function Sidebar() {
     mutationKey: "changeUploadStatus",
   });
 
-  const isUploading = uploadFilePending || uploadStatusPending;
+  const { mutateAsync: uploadFileMutate, isPending: uploadFilePending } =
+    useAppMutation({
+      mutationFn: (data) => uploadFile(data?.url, data?.file, data?.file?.type),
+      mutationKey: "uploadFile",
+    });
+
+  const isUploading =
+    uploadFilePending || uploadStatusPending || getUploadUrlPending;
 
   const {
     user: { user = {} },
@@ -86,28 +100,38 @@ export default function Sidebar() {
   };
 
   const handleFileUpload = async (file) => {
-    await uploadFileMutate({
-      fileName: file?.name,
-      size: file?.size,
-      type: "avatar",
-      mimeType: file?.type,
-    });
-    const { url, fileId } = uploadFileResponse?.data;
-    const res = await uploadFile(url, file);
-    if (res.status === 200) {
-      await changeUploadStatusMutate(
-        { fileId },
-        {
-          onSuccess: () => {
-            queryClient.refetchQueries({
-              queryKey: ["geteUserInfo"],
-              exact: false,
-            });
-          },
-        }
-      );
-    }
-    handleClose();
+    await getUploadUrlMutate(
+      {
+        fileName: file?.name,
+        size: file?.size,
+        type: "avatar",
+        mimeType: file?.type,
+      },
+      {
+        onSuccess: async (response) => {
+          const { url, fileId } = response?.data;
+          await uploadFileMutate(
+            { url, file },
+            {
+              onSuccess: async (response) => {
+                await changeUploadStatusMutate(
+                  { fileId },
+                  {
+                    onSuccess: () => {
+                      queryClient.refetchQueries({
+                        queryKey: ["geteUserInfo"],
+                        exact: false,
+                      });
+                      handleClose();
+                    },
+                  }
+                );
+              },
+            }
+          );
+        },
+      }
+    );
   };
 
   const { mutate: logoutMutate, isPending: isLoggingOut } = useAppMutation({
@@ -246,15 +270,21 @@ export default function Sidebar() {
               fullWidth
               gap={5}
             >
-              <Button fullWidth onClick={handleClose}>
+              <Button
+                fullWidth
+                onClick={handleClose}
+                color="danger"
+                disabled={isUploading}
+              >
                 Cancel
               </Button>
               <Button
                 fullWidth
                 onClick={() => handleFileUpload(file)}
                 disabled={isUploading}
+                color="success"
               >
-                Update
+                {isUploading ? <CircularProgress /> : "Update"}
               </Button>
             </Stack>
           </Stack>
