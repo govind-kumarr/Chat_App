@@ -38,10 +38,12 @@ class SocketManager {
     const userId = user?.id;
     this.socket.on("create-chat", async (data, cb) => {
       try {
-        const { participants, type, name, description } = data || {}; // Handle group name description here
+        const { participants, type = "group", name, description } = data || {}; // Handle group name description here
         const chat = await createChat(type, participants);
         cb({ message: "Chat created successfully", chatId: chat._id });
-      } catch (error) {}
+      } catch (error) {
+        console.error(`Error creating chat: ${error?.message}`);
+      }
     });
     this.socket.on("get-chats", async (cb) => {
       console.log("userid", { userId });

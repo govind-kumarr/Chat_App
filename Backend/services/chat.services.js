@@ -155,7 +155,7 @@ const getChatHistory = async (chatId) => {
 
 const createChat = async (type, participants) => {
   try {
-    if (participants?.length > 0) {
+    if (participants?.length > 2) {
       const chat = new ChatModel({
         type,
         participants,
@@ -163,6 +163,8 @@ const createChat = async (type, participants) => {
       await chat.save();
       return chat;
     }
+    console.log("Participants should be more than 2");
+    
   } catch (error) {
     console.log(`Error creating chat ${error?.message}`);
   }

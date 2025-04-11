@@ -54,7 +54,7 @@ export function toggleMessagesPane() {
 
 export const getGroupMessages = (messages = []) => {
   let messageMap = {};
-  messages.map((m) => {
+  messages?.map((m) => {
     const { createdAt } = m;
     const formattedDate = getFormattedDate(createdAt, dateFormats.date);
     if (!messageMap[formattedDate]) {

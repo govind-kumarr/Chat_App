@@ -70,6 +70,21 @@ const changeUploadStatus = (data) => {
   });
 };
 
+const getChatUsers = () => {
+  return apiClient({
+    url: ROUTES.CHAT_USERS.URL,
+    method: ROUTES.CHAT_USERS.METHOD,
+  });
+};
+
+const createGroup = (data) => {
+  return apiClient({
+    url: ROUTES.CREATE_GROUP.URL,
+    method: ROUTES.CREATE_GROUP.METHOD,
+    data,
+  });
+};
+
 const uploadFile = (url, data, mimeType) => {
   return apiClient({
     baseURL: url,
@@ -93,4 +108,6 @@ export {
   changeUploadStatus,
   uploadFile,
   getUploadUrl,
+  getChatUsers,
+  createGroup
 };

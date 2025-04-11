@@ -35,4 +35,12 @@ export const ROUTES = {
     URL: "/api/file/save",
     METHOD: "POST",
   },
+  CHAT_USERS: {
+    URL: "/api/chat/users",
+    METHOD: "GET",
+  },
+  CREATE_GROUP: {
+    URL: "/api/chat/group",
+    METHOD: "POST",
+  },
 };

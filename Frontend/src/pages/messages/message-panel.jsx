@@ -7,14 +7,11 @@ import ChatBubble from "../../components/ChatBubble";
 import AvatarWithStatus from "../../components/AvatarWithStatus";
 import { getGroupMessages } from "../../utils";
 
-const MessagePanel = () => {
+const MessagePanel = ({ chat, chatMessages }) => {
   const {
     user: { user },
-    chat: { activeChat, activeChatMessages, selectedUser },
   } = useSelector((state) => state);
-  const groupedMessages = getGroupMessages(activeChatMessages);
-
-  console.log({ activeChat });
+  const groupedMessages = chatMessages ? getGroupMessages(chatMessages) : {};
 
   return (
     <Sheet
@@ -25,7 +22,7 @@ const MessagePanel = () => {
         backgroundColor: "background.level1",
       }}
     >
-      {activeChat || selectedUser ? (
+      {chat ? (
         <>
           <MessagesPaneHeader />
           <Box
