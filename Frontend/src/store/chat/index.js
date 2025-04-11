@@ -4,6 +4,7 @@ const defaultState = {
   chats: [],
   activeChat: "",
   activeChatMessages: [],
+  socketStatus: "connecting",
 };
 
 const chatSlice = createSlice({
@@ -15,6 +16,9 @@ const chatSlice = createSlice({
     },
     setActiveChat: (state, action) => {
       state.activeChat = action.payload;
+    },
+    setSocketStatus: (state, action) => {
+      state.socketStatus = action.payload;
     },
     setChatMessages: (state, action) => {
       state.activeChatMessages = action.payload;
@@ -28,7 +32,12 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setChats, setActiveChat, setChatMessages, pushMessage } =
-  chatSlice.actions;
+export const {
+  setChats,
+  setActiveChat,
+  setChatMessages,
+  pushMessage,
+  setSocketStatus,
+} = chatSlice.actions;
 
 export default chatSlice.reducer;

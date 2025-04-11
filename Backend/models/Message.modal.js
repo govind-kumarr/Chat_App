@@ -12,15 +12,14 @@ const MessageSchema = new mongoose.Schema(
       required: false,
       ref: "users",
     },
-    groupId: {
+    chatId: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,
-      ref: "users", // Change to groups collection later
+      ref: "chats", // Change to groups collection later
     },
     type: {
       type: String,
       enum: ["text", "media"],
-      required: true,
       default: "text",
     },
     content: {
@@ -31,7 +30,7 @@ const MessageSchema = new mongoose.Schema(
     file: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,
-      ref: "files"
+      ref: "files",
     },
     status: {
       type: String,

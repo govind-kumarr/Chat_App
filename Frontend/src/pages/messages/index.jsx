@@ -9,6 +9,7 @@ import {
   setActiveChat,
   setChatMessages,
   setChats,
+  setSocketStatus,
 } from "../../store/chat";
 import MessagePanel from "./message-panel";
 
@@ -16,7 +17,7 @@ const Messages = () => {
   const dispatch = useDispatch();
   const {
     user: { user },
-    chat: { activeChat, chats },
+    chat: { activeChat, chats, activeChatMessages },
   } = useSelector((state) => state);
   // console.log({ user, chats, activeChat });
 
@@ -33,6 +34,23 @@ const Messages = () => {
 
     socketEventEmitter.on("new-message", (data) => {
       dispatch(pushMessage(data));
+    });
+
+    socketEventEmitter.on("connect", (data) => {
+      console.log("Connected");
+      dispatch(setSocketStatus("connected"));
+    });
+    socketEventEmitter.on("reconnect", (data) => {
+      console.log("Re-Connected");
+      dispatch(setSocketStatus("connected"));
+    });
+    socketEventEmitter.on("reconnect_attempt", (data) => {
+      dispatch(setSocketStatus("reconnecting"));
+      console.log("Reconnecting...");
+    });
+    socketEventEmitter.on("disconnect", (data) => {
+      dispatch(setSocketStatus("disconnected"));
+      console.log("Disconnected");
     });
   }, []);
 
@@ -62,8 +80,18 @@ const Messages = () => {
       }}
     >
       <ChatsPanel />
+      {chats?.length > 0 &&
+        chats?.map((chat) => {
+          if (chat.id === activeChat)
+            return (
+              <MessagePanel
+                key={chat.id}
+                chat={activeChat}
+                chatMessages={activeChatMessages}
+              />
+            );
+        })}
       <MessagePanel />
-      {/* <MessagesPane chat={selectedChat} /> */}
     </Sheet>
   );
 };

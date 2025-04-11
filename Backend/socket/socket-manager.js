@@ -3,6 +3,8 @@ const {
   getSocket,
   addMessage,
   findAndPopulateMessage,
+  prepareChats,
+  createChat,
 } = require("../services/chat.services");
 const { getAllUsers, changeStatus } = require("../services/user.services");
 const { toObjectId } = require("../utils");
@@ -22,7 +24,7 @@ class SocketManager {
       if (socket) {
         const user = socket?.locals?.user;
         await changeStatus(user.id, true, socket.id);
-        this.sendChats();
+        this.sendChats(socket.id);
         this.attachListeners();
       }
     } catch (error) {
@@ -34,19 +36,29 @@ class SocketManager {
     const socket = this.socket;
     const user = socket?.locals?.user;
     const userId = user?.id;
+    this.socket.on("create-chat", async (data, cb) => {
+      try {
+        const { participants, type = "group", name, description } = data || {}; // Handle group name description here
+        const chat = await createChat(type, participants);
+        cb({ message: "Chat created successfully", chatId: chat._id });
+      } catch (error) {
+        console.error(`Error creating chat: ${error?.message}`);
+      }
+    });
     this.socket.on("get-chats", async (cb) => {
-      const chats = await getAllUsers();
+      console.log("userid", { userId });
+      const chats = await prepareChats(userId);
       return cb({ chats });
     });
     this.socket.on("get-chat-history", async (chatId, cb) => {
-      const chat = await getChatHistory(userId, chatId);
+      const chat = await getChatHistory(chatId);
       return cb({ chat });
     });
     this.socket.on("add-message", async (data, cb) => {
       try {
         const res = await addMessage(userId, data);
         cb({ message: "Message added successfully", data: res });
-        this.sendNewMessage(res);
+        this.sendNewMessage(res?.id);
       } catch (error) {
         console.log(`Error: ${error?.message}`);
       }
@@ -57,29 +69,38 @@ class SocketManager {
 
   async handleDisconnecting() {
     try {
+      // Currently send complete chats again on disconnect Improve this to send just a signal of disconnecting user
       const user = this.socket?.locals?.user;
       const userId = user.id;
       await changeStatus(userId, false, "");
-      this.sendChats();
+      // this.sendChats();
     } catch (error) {
       console.log(`Error: ${error?.message}`);
     }
   }
 
-  handleDisconnect() {
+  async handleDisconnect() {
+    // Currently send complete chats again on disconnect Improve this to send just a signal of disconnecting user
     const user = this.socket?.locals?.user;
+    const userId = user.id;
+    await changeStatus(userId, false, "");
+    // this.sendChats();
     console.log(`User ${user?.username} disconnected`);
   }
 
-  async sendNewMessage(messages) {
+  async sendNewMessage(messageId) {
     const io = this.io;
-    if (messages && Array.isArray(messages) && messages?.length > 0 && io) {
-      const [message] = messages;
-      const populatedMessage = await findAndPopulateMessage(message?._id);
+    if (messageId && io) {
+      const populatedMessage = await findAndPopulateMessage(messageId);
       populatedMessage["sender"] = populatedMessage.senderId;
       populatedMessage["recipient"] = populatedMessage.recipientId;
       populatedMessage["senderId"] = populatedMessage?.sender?._id;
       populatedMessage["recipientId"] = populatedMessage?.recipient?._id;
+      if (populatedMessage.type === "media") {
+        populatedMessage["fileDetails"] = populatedMessage?.file;
+        populatedMessage["file"] = populatedMessage?.file?._id;
+      }
+
       const sendersSocket = populatedMessage?.sender?.socketId;
       const recieversSocket = populatedMessage?.recipient?.socketId;
       io.to(sendersSocket).emit("new-message", populatedMessage);
@@ -87,10 +108,12 @@ class SocketManager {
     }
   }
 
-  async sendChats() {
+  async sendChats(socketId) {
     const io = this.io;
-    const chats = await getAllUsers();
-    io.emit("chats", { chats });
+    const user = this.socket?.locals?.user;
+    const userId = user.id;
+    const chats = await prepareChats(userId);
+    if (socketId) io.to(socketId).emit("chats", { chats });
   }
 
   async sendChatHistory(senderId, recipientId) {

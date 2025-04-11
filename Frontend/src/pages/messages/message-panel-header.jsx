@@ -14,13 +14,12 @@ const MessagePanelHeader = () => {
   } = useSelector((state) => state);
 
   const {
-    username,
+    name,
     email,
     isActive,
     avatar,
     lastActive = "", // Calc duration
-  } = chats.find((c) => c.id === activeChat) || {};
-  console.log({ activeChat });
+  } = chats?.find((c) => c.id === activeChat) || {};
 
   return (
     <Stack
@@ -74,7 +73,7 @@ const MessagePanelHeader = () => {
             }
             sx={{ fontWeight: "lg", fontSize: "lg" }}
           >
-            {username}
+            {name}
           </Typography>
           <Typography level="body-sm">{email}</Typography>
         </div>

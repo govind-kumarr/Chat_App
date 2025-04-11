@@ -20,6 +20,18 @@ const io = new Server(server, {
 attachMiddlewares(io);
 initializeSocket(io);
 
+const closeConnections = async (io) => {
+  try {
+    const sockets = await io.fetchSockets();
+    sockets?.map((socket) => socket?.disconnect(true));
+  } catch (error) {
+    console.error(`Error closing connections: ${error?.message}`);
+  }
+};
+const shutdownServer = async () => {
+  closeConnections();
+};
+
 const configureAws = async () => {
   await aws.setupBucket();
   await aws.setupDir(config.userDir);
@@ -37,5 +49,17 @@ const startServer = async () => {
     console.log(error);
   }
 };
+
+process.on("SIGINT", () => {
+  console.log("Manual shutdown: SIGINT (Ctrl+C)");
+  shutdownServer();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  console.log("Manual shutdown: SIGTERM");
+  shutdownServer();
+  process.exit(0);
+});
 
 startServer();

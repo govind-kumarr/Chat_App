@@ -24,8 +24,6 @@ const updateUploadStatus = async (fileId) => {
     const file = await FileModel.findById(fileId).populate("userId");
     if (file && !file.uploaded) {
       const user = file.userId;
-      console.log({ file, user });
-
       file.uploaded = true;
       file.uploadedAt = new Date();
       file.url = await aws.getPreSignedUrl(file.storageKey);

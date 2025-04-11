@@ -19,8 +19,9 @@ import { SocketService } from "../../socket";
 import VisuallyHiddenInput from "../../components/VisuallyHiddenInput";
 import { changeUploadStatus, uploadFile } from "../../api/actions";
 import useAppMutation from "../../hooks/useAppMutation";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf"; // Add colorfull icons for file types
 
-const MessageInput = () => {
+const FileInput = () => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState(null);
@@ -128,115 +129,47 @@ const MessageInput = () => {
 
   return (
     <Box sx={{ px: 2, pb: 3 }}>
-      <FormControl>
-        <Textarea
-          placeholder="Type something here…"
-          aria-label="Message"
-          minRows={3}
-          maxRows={10}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          endDecorator={
-            <Stack
-              direction="row"
-              sx={{
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexGrow: 1,
-                py: 1,
-                pr: 1,
-                borderTop: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <div>
-                <IconButton
-                  size="sm"
-                  variant="plain"
-                  color="neutral"
-                  onClick={handleFileClick}
-                >
-                  <AttachFileIcon />
-                </IconButton>
-                <VisuallyHiddenInput
-                  type="file"
-                  ref={inputRef}
-                  onChange={handleFileSelect}
-                />
-              </div>
-              <Button
-                size="sm"
-                color="primary"
-                sx={{ alignSelf: "center", borderRadius: "sm" }}
-                endDecorator={<SendRoundedIcon />}
-                onClick={() => handleMessageSend(text)}
-                disabled={!text || sending}
-              >
-                Send
-              </Button>
-            </Stack>
-          }
+      <Box sx={{ width: "100%" }} borderRadius={"10px"}>
+        <Stack
+          direction="row"
           sx={{
-            "& textarea:first-of-type": {
-              minHeight: 72,
-            },
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexGrow: 1,
+            py: 1,
+            pr: 1,
+            // borderTop: "1px solid",
+            borderColor: "divider",
           }}
-        />
-      </FormControl>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-      >
-        <Sheet
-          variant="outlined"
-          sx={{ maxWidth: 500, borderRadius: "md", p: 3, boxShadow: "lg" }}
         >
-          <ModalClose variant="plain" sx={{ m: 2 }} />
-          {file && (
-            <Box
-              sx={{
-                border: "1px solid",
-                borderColor: "neutral.outlinedBorder",
-                borderRadius: "md",
-                padding: 2,
-                backgroundColor: "neutral.softBg",
-                maxWidth: 400,
-              }}
+          <Stack direction={"row"}>
+            <IconButton
+              size="lg"
+              variant="plain"
+              color="neutral"
+              onClick={handleFileClick}
+              // sx={{border: '1px solid grey'}}
             >
-              <Typography level="title-md" gutterBottom>
-                File Details
-              </Typography>
-
-              <Stack spacing={1}>
-                <Typography level="body-sm">
-                  <strong>Name:</strong> {file.name}
-                </Typography>
-                <Typography level="body-sm">
-                  <strong>Type:</strong> {file.type}
-                </Typography>
-                <Typography level="body-sm">
-                  <strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB
-                </Typography>
-              </Stack>
-
-              <Box mt={2}>
-                <Button
-                  onClick={() => handleFileSend(file)}
-                  color="primary"
-                  disabled={sending}
-                  fullWidth
-                >
-                  Send
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </Sheet>
-      </Modal>
+              <PictureAsPdfIcon />
+            </IconButton>
+            <Stack direction={"column"}>
+              <Typography level="body-sm">{"file name here"}</Typography>
+            </Stack>
+          </Stack>
+          <Button
+            size="sm"
+            color="primary"
+            sx={{ alignSelf: "center", borderRadius: "sm" }}
+            endDecorator={<SendRoundedIcon />}
+            onClick={() => handleMessageSend(text)}
+            disabled={!text || sending}
+          >
+            Send
+          </Button>
+        </Stack>
+      </Box>
     </Box>
   );
 };
 
-export default MessageInput;
+export default FileInput;

@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
@@ -7,15 +7,16 @@ import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
 import CelebrationOutlinedIcon from "@mui/icons-material/CelebrationOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
 import { getFormattedDate } from "../utils";
+import FileDetails from "./file-details";
 
 export default function ChatBubble(props) {
-  const { content, variant, createdAt, attachment = undefined, sender } = props;
+  const { content, variant, createdAt, fileDetails = {}, type, sender } = props;
   const isSent = variant === "sent";
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [isLiked, setIsLiked] = React.useState(false);
-  const [isCelebrated, setIsCelebrated] = React.useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isCelebrated, setIsCelebrated] = useState(false);
+
   return (
     <Box sx={{ maxWidth: "60%", minWidth: "auto" }}>
       <Stack
@@ -24,13 +25,13 @@ export default function ChatBubble(props) {
         sx={{ justifyContent: "space-between", mb: 0.25 }}
       >
         <Typography level="body-xs">
-          {sender === "You" ? sender : sender?.username}
+          {sender === "You" ? sender : sender}
         </Typography>
         <Typography level="body-xs">
           {getFormattedDate(createdAt, "HH:MM A")}
         </Typography>
       </Stack>
-      {attachment ? (
+      {type === "media" ? (
         <Sheet
           variant="outlined"
           sx={[
@@ -45,17 +46,7 @@ export default function ChatBubble(props) {
             isSent ? { borderTopLeftRadius: "lg" } : { borderTopLeftRadius: 0 },
           ]}
         >
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-            <Avatar color="primary" size="lg">
-              <InsertDriveFileRoundedIcon />
-            </Avatar>
-            <div>
-              <Typography sx={{ fontSize: "sm" }}>
-                {attachment.fileName}
-              </Typography>
-              <Typography level="body-sm">{attachment.size}</Typography>
-            </div>
-          </Stack>
+          <FileDetails key={fileDetails?._id} fileDetails={fileDetails} />
         </Sheet>
       ) : (
         <Box

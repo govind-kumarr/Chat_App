@@ -37,6 +37,22 @@ class SocketService {
     SocketService.socket.on("new-message", (data) => {
       socketEventEmitter.emit("new-message", data);
     });
+
+    SocketService.socket.on("connect", (data) => {
+      socketEventEmitter.emit("connect", data);
+    });
+
+    SocketService.socket.on("reconnect", (data) => {
+      socketEventEmitter.emit("reconnect", data);
+    });
+
+    SocketService.socket.on("reconnect_attempt", (data) => {
+      socketEventEmitter.emit("reconnect_attempt", data);
+    });
+
+    SocketService.socket.on("disconnect", (data) => {
+      socketEventEmitter.emit("disconnect", data);
+    });
   }
 
   static getChats() {

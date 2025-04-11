@@ -8,8 +8,9 @@ import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useSelector } from "react-redux";
-import ChatListItem from "./chat-list-item";
+import UserListItem from "./user-list-item";
 import { toggleMessagesPane } from "../../utils";
+import ChatListItem from "./chat-list-item";
 
 export default function ChatsPane() {
   const {
@@ -93,23 +94,12 @@ export default function ChatsPane() {
           "--ListItem-paddingX": "1rem",
         }}
       >
-        {chats?.length > 1 ? (
-          chats
-            ?.filter((c) => c?.id != user?.id)
-            ?.map((chat) => <ChatListItem key={chat.id} chat={chat} />)
-        ) : (
-          <Box
-            width={"100%"}
-            // height={"100%"}
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Typography level="title-sm">No Chats Available</Typography>
-          </Box>
-        )}
+        {chats?.length > 0 &&
+          chats?.map((chat) => {
+            const { type, id } = chat;
+            if (type === "user") return <UserListItem key={id} user={chat} />;
+            return <ChatListItem key={id} chat={chat} />;
+          })}
       </List>
     </Sheet>
   );
