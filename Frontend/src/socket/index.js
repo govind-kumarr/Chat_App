@@ -17,6 +17,7 @@ class SocketService {
     SocketService.socket = socket;
     SocketService.socket.on("connect", () => {
       SocketService.intialize();
+      socketEventEmitter.emit("connect", null);
     });
   }
 
@@ -36,10 +37,6 @@ class SocketService {
 
     SocketService.socket.on("new-message", (data) => {
       socketEventEmitter.emit("new-message", data);
-    });
-
-    SocketService.socket.on("connect", (data) => {
-      socketEventEmitter.emit("connect", data);
     });
 
     SocketService.socket.on("reconnect", (data) => {

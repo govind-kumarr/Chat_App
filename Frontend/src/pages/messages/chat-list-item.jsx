@@ -5,6 +5,7 @@ import {
   toggleMessagesPane,
 } from "../../utils";
 import {
+  Avatar,
   Box,
   ListDivider,
   ListItem,
@@ -48,7 +49,11 @@ const ChatListItem = ({ chat }) => {
           sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
         >
           <Stack direction="row" spacing={1.5}>
-            <AvatarWithStatus online={isActive} src={avatar} />
+            {type === "personal" ? (
+              <AvatarWithStatus online={isActive} src={avatar} />
+            ) : (
+              <Avatar size="sm" />
+            )}
             <Box sx={{ flex: 1 }}>
               <Typography level="title-sm">{name}</Typography>
               <Typography level="body-sm" whiteSpace={"nowrap"}>
@@ -72,18 +77,6 @@ const ChatListItem = ({ chat }) => {
               </Typography>
             </Box>
           </Stack>
-          {/* <Typography
-            level="body-sm"
-            sx={{
-              display: "-webkit-box",
-              WebkitLineClamp: "2",
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {lastMessageContent || "abc"}
-          </Typography> */}
         </ListItemButton>
       </ListItem>
       <ListDivider sx={{ margin: 0 }} />

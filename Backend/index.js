@@ -1,4 +1,5 @@
 const { createServer } = require("http");
+const gracefulShutdown = require("http-graceful-shutdown");
 const { Server } = require("socket.io");
 const app = require("./app");
 require("dotenv").config();
@@ -7,6 +8,7 @@ const { connectToDb } = require("./db/db");
 const { corsOptions, loadEnv } = require("./config");
 const { initializeSocket, attachMiddlewares } = require("./socket");
 const aws = require("./aws");
+const { changeStatus } = require("./services/user.services");
 const port = process.env.PORT || 3030;
 const config = loadEnv();
 
@@ -20,16 +22,20 @@ const io = new Server(server, {
 attachMiddlewares(io);
 initializeSocket(io);
 
-const closeConnections = async (io) => {
+const closeConnections = async () => {
   try {
-    const sockets = await io.fetchSockets();
-    sockets?.map((socket) => socket?.disconnect(true));
+    const sockets = await io?.fetchSockets();
+    const promises = sockets?.map((socket) => {
+      const user = socket?.locals?.user;
+      const userId = user?.id;
+      socket?.disconnect(true);
+      return userId ? changeStatus(userId, false, "") : Promise.resolve();
+    });
+    await Promise.allSettled(promises);
+    console.log("Closed all socket connections.");
   } catch (error) {
     console.error(`Error closing connections: ${error?.message}`);
   }
-};
-const shutdownServer = async () => {
-  closeConnections();
 };
 
 const configureAws = async () => {
@@ -38,6 +44,16 @@ const configureAws = async () => {
   await aws.setupDir(config.chatDir);
 };
 
+function shutdownFunction(signal) {
+  return new Promise((resolve) => {
+    console.log("... called signal: " + signal);
+    console.log("... in cleanup");
+    closeConnections().then((res) => {
+      resolve();
+    });
+  });
+}
+
 const startServer = async () => {
   try {
     await connectToDb();
@@ -45,21 +61,19 @@ const startServer = async () => {
     server.listen(port, () => {
       console.log(`Server listening on Port ${port}`);
     });
+    gracefulShutdown(server, {
+      signals: "SIGINT SIGTERM",
+      timeout: 10000,
+      development: true,
+      forceExit: false,
+      onShutdown: shutdownFunction,
+    });
   } catch (error) {
     console.log(error);
   }
 };
 
-process.on("SIGINT", () => {
-  console.log("Manual shutdown: SIGINT (Ctrl+C)");
-  shutdownServer();
-  process.exit(0);
-});
-
-process.on("SIGTERM", () => {
-  console.log("Manual shutdown: SIGTERM");
-  shutdownServer();
-  process.exit(0);
-});
+// process.on("SIGINT", () => handleShutdown("SIGINT"));
+// process.on("SIGTERM", () => handleShutdown("SIGTERM"));
 
 startServer();

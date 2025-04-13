@@ -1,3 +1,5 @@
+import { apiClient } from "./api/axiosInstance";
+
 export function openSidebar() {
   if (typeof window !== "undefined") {
     document.body.style.overflow = "hidden";
@@ -102,7 +104,7 @@ const oneMb = 1024 * oneKb;
 const oneSec = 1000;
 const oneMinute = 60 * oneSec;
 const oneHour = 60 * oneMinute;
-const oneDay = 60 * oneHour;
+const oneDay = 24 * oneHour;
 
 export const sizeConversions = (size = 0) => {
   let parsedSize = "";
@@ -125,8 +127,11 @@ export const timeConversions = (time = 0) => {
 
   const diff = currentTime - time;
 
-  if (typeof time === "number" && diff < oneDay) {
-    if (diff >= oneHour) {
+  if (typeof time === "number") {
+    if (diff >= oneDay) {
+      const days = Math.floor(diff / oneDay);
+      parsedTime = `${days} ${days > 1 ? "days" : "day"} ago`;
+    } else if (diff >= oneHour) {
       const hours = Math.floor(diff / oneHour);
       parsedTime = `${hours} ${hours > 1 ? "hours" : "hour"} ago`;
     } else if (diff >= oneMinute) {
@@ -156,15 +161,14 @@ export const handleDownload = async (
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-
-    const downloadUrl = URL.createObjectURL(blob);
+    const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = downloadUrl;
+    link.href = blobUrl;
     link.download = originalFileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(downloadUrl);
+    URL.revokeObjectURL(blobUrl);
     cb();
   } catch (error) {
     console.error("Download failed:", error);

@@ -1,6 +1,7 @@
 const aws = require("../aws");
 const { FileModel } = require("../models/File.modal");
-const { oneWeekAhead } = require("../utils");
+const { MessageModel } = require("../models/Message.modal");
+const { oneWeekAhead, toObjectId } = require("../utils");
 
 const createFile = async (fileObj) => {
   try {
@@ -44,7 +45,29 @@ const updateUploadStatus = async (fileId) => {
   }
 };
 
+const isFileOwner = async (fileId, userId) => {
+  const file = await FileModel.findOne({
+    _id: toObjectId(fileId),
+  });
+  if (!file) throw new Error("File doesn't exist!");
+
+  if (!file?.userId?.equals(toObjectId(userId)))
+    throw new Error("You are not authorized to delete this file");
+  return file;
+};
+
+const deleteFileObj = async (fileId) => {
+  try {
+    await FileModel.deleteOne({ _id: toObjectId(fileId) });
+    await MessageModel.deleteOne({ file: toObjectId(fileId) });
+  } catch (error) {
+    console.error(`Error deleting file: ${error?.message}`);
+  }
+};
+
 module.exports = {
   createFile,
   updateUploadStatus,
+  isFileOwner,
+  deleteFileObj,
 };

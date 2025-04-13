@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Sheet } from "@mui/joy";
+import React, { useEffect, useState } from "react";
+import { Box, Sheet } from "@mui/joy";
 import ChatsPanel from "./chats-panel";
 import { SocketService } from "../../socket";
 import { socketEventEmitter } from "../../socket/emiitter";
@@ -12,14 +12,15 @@ import {
   setSocketStatus,
 } from "../../store/chat";
 import MessagePanel from "./message-panel";
+import ChatBubble from "../../components/ChatBubble";
+import Profile from "./profile-section";
 
 const Messages = () => {
   const dispatch = useDispatch();
   const {
     user: { user },
-    chat: { activeChat, chats, activeChatMessages },
+    chat: { activeChat, chats, activeChatMessages, showProfile },
   } = useSelector((state) => state);
-  // console.log({ user, chats, activeChat });
 
   useEffect(() => {
     SocketService.connect();
@@ -40,6 +41,7 @@ const Messages = () => {
       console.log("Connected");
       dispatch(setSocketStatus("connected"));
     });
+
     socketEventEmitter.on("reconnect", (data) => {
       console.log("Re-Connected");
       dispatch(setSocketStatus("connected"));
@@ -59,6 +61,7 @@ const Messages = () => {
   }, [activeChat]);
 
   useEffect(() => {
+    console.log({ chats });
     if (chats?.length > 0 && !activeChat) {
       const [chat] = chats.filter((c) => c?.id != user?.id);
       dispatch(setActiveChat(chat?.id));
@@ -69,29 +72,32 @@ const Messages = () => {
     <Sheet
       sx={{
         flex: 1,
-        width: "100%",
+        // width: "100%",
         mx: "auto",
         pt: { xs: "var(--Header-height)", md: 0 },
         display: "grid",
         gridTemplateColumns: {
           xs: "1fr",
-          sm: "minmax(min-content, min(30%, 400px)) 1fr",
+          sm: showProfile
+            ? "1fr minmax(min-content, min(30%, 500px))"
+            : "minmax(min-content, min(30%, 100px)) 1fr",
         },
       }}
     >
-      <ChatsPanel />
+      {!showProfile && <ChatsPanel />}
       {chats?.length > 0 &&
+        activeChat &&
         chats?.map((chat) => {
-          if (chat.id === activeChat)
-            return (
-              <MessagePanel
-                key={chat.id}
-                chat={activeChat}
-                chatMessages={activeChatMessages}
-              />
-            );
+          return (
+            <MessagePanel
+              key={chat.id}
+              chat={chat}
+              chatMessages={chat.id === activeChat ? activeChatMessages : []}
+              show={chat.id === activeChat}
+            />
+          );
         })}
-      <MessagePanel />
+      {showProfile && <Profile />}
     </Sheet>
   );
 };

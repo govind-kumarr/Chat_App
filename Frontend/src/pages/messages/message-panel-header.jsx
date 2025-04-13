@@ -6,12 +6,13 @@ import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import React from "react";
 import { toggleMessagesPane } from "../../utils";
 import { useDispatch, useSelector } from "react-redux";
+import { setShowProfile } from "../../store/chat";
 
 const MessagePanelHeader = () => {
-  const dispatch = useDispatch();
   const {
-    chat: { activeChat, chats },
+    chat: { activeChat, chats, showProfile },
   } = useSelector((state) => state);
+  const dispatch = useDispatch();
 
   const {
     name,
@@ -19,6 +20,7 @@ const MessagePanelHeader = () => {
     isActive,
     avatar,
     lastActive = "", // Calc duration
+    type,
   } = chats?.find((c) => c.id === activeChat) || {};
 
   return (
@@ -53,7 +55,7 @@ const MessagePanelHeader = () => {
             component="h2"
             noWrap
             endDecorator={
-              true ? (
+              type !== "group" ? (
                 <Chip
                   variant="outlined"
                   size="sm"
@@ -93,8 +95,11 @@ const MessagePanelHeader = () => {
           variant="outlined"
           size="sm"
           sx={{ display: { xs: "none", md: "inline-flex" } }}
+          onClick={() => {
+            dispatch(setShowProfile(!showProfile));
+          }}
         >
-          View profile
+          {showProfile ? "Hide" : "View"} profile
         </Button>
         <IconButton size="sm" variant="plain" color="neutral">
           <MoreVertRoundedIcon />

@@ -1,5 +1,10 @@
 const aws = require("../aws");
-const { createFile, updateUploadStatus } = require("../services/file.services");
+const {
+  createFile,
+  updateUploadStatus,
+  isFileOwner,
+  deleteFileObj,
+} = require("../services/file.services");
 const { getStorageKey, parseObjectId } = require("../utils");
 
 const uploadUrl = async (req, res) => {
@@ -38,7 +43,24 @@ const saveFile = async (req, res) => {
   }
 };
 
+const deleteFile = async (req, res) => {
+  try {
+    const userId = req.locals?.user?.id;
+    const { fileId } = req.body;
+    let file = await isFileOwner(fileId, userId);
+    await aws.deleteFile(file.storageKey);
+    await deleteFileObj(file?._id);
+    res.status(200).json({
+      message: "File deleted successfully",
+    });
+  } catch (error) {
+    console.error(`Error deleting file: ${error?.message}`);
+    res.status(400).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
 module.exports = {
   uploadUrl,
   saveFile,
+  deleteFile,
 };

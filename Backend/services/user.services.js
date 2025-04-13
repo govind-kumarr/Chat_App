@@ -79,11 +79,15 @@ const getActiveUsers = async () => {
 };
 
 const changeStatus = async (userId = "", isActive = false, socketId = "") => {
-  return await UserModel.findByIdAndUpdate(userId, {
-    isActive,
-    socketId,
-    lastActiveAt: isActive ? null : new Date(),
-  });
+  try {
+    await UserModel.findByIdAndUpdate(userId, {
+      isActive,
+      socketId,
+      lastActiveAt: isActive ? null : new Date(),
+    });
+  } catch (error) {
+    console.error(`Error closing connection: ${error?.message}`);
+  }
 };
 
 const checkPasswordReset = async (userId) => {

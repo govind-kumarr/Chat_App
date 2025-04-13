@@ -18,6 +18,28 @@ const ChatSchema = new mongoose.Schema(
       type: String,
       default: "personal",
     },
+    avatar: {
+      key: {
+        type: String,
+        default: "",
+        required: false,
+      },
+      url: {
+        type: String,
+        default: "",
+        required: false,
+      },
+      urlExpiry: {
+        type: Date,
+        required: false,
+      },
+    },
+    admin: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "users",
+      default: [],
+      required: false,
+    },
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "messages",
