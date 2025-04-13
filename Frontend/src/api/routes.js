@@ -35,12 +35,20 @@ export const ROUTES = {
     URL: "/api/file/save",
     METHOD: "POST",
   },
+  DELETE_FILE: {
+    URL: "/api/file/delete",
+    METHOD: "POST",
+  },
   CHAT_USERS: {
     URL: "/api/chat/users",
     METHOD: "GET",
   },
   CREATE_GROUP: {
     URL: "/api/chat/group",
+    METHOD: "POST",
+  },
+  GROUP_MEMBERS: {
+    URL: "/api/chat/group/members",
     METHOD: "POST",
   },
 };

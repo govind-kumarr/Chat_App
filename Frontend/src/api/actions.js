@@ -70,10 +70,26 @@ const changeUploadStatus = (data) => {
   });
 };
 
+const deleteFile = (data) => {
+  return apiClient({
+    url: ROUTES.DELETE_FILE.URL,
+    method: ROUTES.DELETE_FILE.METHOD,
+    data,
+  });
+};
+
 const getChatUsers = () => {
   return apiClient({
     url: ROUTES.CHAT_USERS.URL,
     method: ROUTES.CHAT_USERS.METHOD,
+  });
+};
+
+const getGroupMembers = (data) => {
+  return apiClient({
+    url: ROUTES.GROUP_MEMBERS.URL,
+    method: ROUTES.GROUP_MEMBERS.METHOD,
+    data,
   });
 };
 
@@ -109,5 +125,7 @@ export {
   uploadFile,
   getUploadUrl,
   getChatUsers,
-  createGroup
+  createGroup,
+  getGroupMembers,
+  deleteFile,
 };

@@ -10,78 +10,6 @@ const {
 } = require("../utils");
 const { createFile } = require("./file.services");
 
-// const getChatHistory = async (senderId, recipientId) => {
-//   const messages = await MessageModel.aggregate([
-//     {
-//       $match: {
-//         $or: [
-//           {
-//             senderId: toObjectId(senderId),
-//             recipientId: toObjectId(recipientId),
-//           },
-//           {
-//             senderId: toObjectId(recipientId),
-//             recipientId: toObjectId(senderId),
-//           },
-//         ],
-//       },
-//     },
-//     {
-//       $lookup: {
-//         from: "users",
-//         localField: "senderId",
-//         foreignField: "_id",
-//         as: "sender",
-//       },
-//     },
-//     {
-//       $unwind: "$sender",
-//     },
-//     {
-//       $project: {
-//         id: { $toString: "$_id" },
-//         senderId: { $toString: "$senderId" },
-//         recipientId: { $toString: "$recipientId" },
-//         sender: 1,
-//         type: 1,
-//         content: 1,
-//         status: 1,
-//         createdAt: 1,
-//         file: 1,
-//         _id: 0,
-//       },
-//     },
-//     {
-//       $lookup: {
-//         from: "files",
-//         let: { fileId: "$file" },
-//         pipeline: [
-//           {
-//             $match: {
-//               $expr: {
-//                 $and: [{ $eq: ["$_id", "$$fileId"] }],
-//               },
-//             },
-//           },
-//         ],
-//         as: "fileDetails",
-//       },
-//     },
-//     {
-//       $unwind: {
-//         path: "$fileDetails",
-//         preserveNullAndEmptyArrays: true,
-//       },
-//     },
-//     {
-//       $sort: {
-//         createdAt: 1,
-//       },
-//     },
-//   ]);
-//   return messages;
-// };
-
 const getChatHistory = async (chatId) => {
   try {
     const chat = await MessageModel.aggregate([
@@ -164,7 +92,6 @@ const createChat = async (type, participants) => {
       return chat;
     }
     console.log("Participants should be more than 2");
-    
   } catch (error) {
     console.log(`Error creating chat ${error?.message}`);
   }
@@ -355,6 +282,11 @@ const prepareChats = async (userId) => {
           },
         },
       },
+      {
+        $sort: {
+          lastMessageAt: -1,
+        },
+      },
     ]);
     const chatUsersArr = chats?.map((c) => c?.recipientId).concat(userObjectId);
     const users = await UserModel.aggregate([
@@ -372,11 +304,58 @@ const prepareChats = async (userId) => {
         },
       },
     ]);
-    const groups = await ChatModel.find({
-      type: "group",
-      participants: { $in: [userObjectId] },
-    }).lean();
-    return chats.concat(users).concat(groups);
+    const groups = await ChatModel.aggregate([
+      {
+        $match: {
+          type: "group",
+          participants: { $in: [userObjectId] },
+        },
+      },
+      {
+        $lookup: {
+          from: "messages",
+          localField: "lastMessage",
+          foreignField: "_id",
+          as: "lastMessage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$lastMessage",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: "$_id",
+          type: 1,
+          name: 1,
+          avatar: "$avatar.url",
+          lastMessageAt: {
+            $ifNull: ["$lastMessage.createdAt", null],
+          },
+          lastMessageType: {
+            $ifNull: ["$lastMessage.type", null],
+          },
+          lastMessageContent: {
+            $ifNull: ["$lastMessage.content", null],
+          },
+        },
+      },
+      {
+        $sort: {
+          lastMessageAt: -1,
+        },
+      },
+    ]);
+
+    const finalResult = chats.concat(groups).sort((a, b) => {
+      const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return bTime - aTime;
+    });
+    return finalResult.concat(users);
   } catch (error) {
     console.error("Error in prepareChats:", error.message);
   }

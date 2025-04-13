@@ -4,6 +4,7 @@ const {
   ListBucketsCommand,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { loadEnv } = require("../config");
@@ -100,6 +101,19 @@ class AWS_Setup {
       expiresIn: 60 * 60,
     });
     return url;
+  }
+
+  async deleteFile(key) {
+    if (!key) throw new Error(`Object Unique Key is missing!`);
+
+    const bucket = this.bucket;
+    const client = this.client;
+    const command = new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+    await client.send(command);
+    return "Delete file from S3";
   }
 }
 

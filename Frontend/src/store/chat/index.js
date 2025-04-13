@@ -5,6 +5,7 @@ const defaultState = {
   activeChat: "",
   activeChatMessages: [],
   socketStatus: "connecting",
+  showProfile: false,
 };
 
 const chatSlice = createSlice({
@@ -23,6 +24,9 @@ const chatSlice = createSlice({
     setChatMessages: (state, action) => {
       state.activeChatMessages = action.payload;
     },
+    setShowProfile: (state, action) => {
+      state.showProfile = action.payload;
+    },
     pushMessage: (state, action) => {
       state.activeChatMessages = [
         ...(state.activeChatMessages || []),
@@ -38,6 +42,7 @@ export const {
   setChatMessages,
   pushMessage,
   setSocketStatus,
+  setShowProfile,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

@@ -19,6 +19,7 @@ import { SocketService } from "../../socket";
 import VisuallyHiddenInput from "../../components/VisuallyHiddenInput";
 import { changeUploadStatus, uploadFile } from "../../api/actions";
 import useAppMutation from "../../hooks/useAppMutation";
+import { checkFileType, sizeConversions } from "../../utils";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
@@ -211,13 +212,13 @@ const MessageInput = () => {
 
               <Stack spacing={1}>
                 <Typography level="body-sm">
-                  <strong>Name:</strong> {file.name}
+                  <strong>Name:</strong> {file?.name}
                 </Typography>
                 <Typography level="body-sm">
-                  <strong>Type:</strong> {file.type}
+                  <strong>Type:</strong> {checkFileType(file?.type)}
                 </Typography>
                 <Typography level="body-sm">
-                  <strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB
+                  <strong>Size:</strong> {sizeConversions(file?.size)}
                 </Typography>
               </Stack>
 
@@ -226,6 +227,7 @@ const MessageInput = () => {
                   onClick={() => handleFileSend(file)}
                   color="primary"
                   disabled={sending}
+                  loading={sending}
                   fullWidth
                 >
                   Send

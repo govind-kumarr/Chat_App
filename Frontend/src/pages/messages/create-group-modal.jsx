@@ -3,8 +3,12 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
+  FormControl,
+  FormHelperText,
   Input,
   Modal,
+  ModalClose,
   Sheet,
   Stack,
 } from "@mui/joy";
@@ -13,29 +17,27 @@ import UserCard from "./user-card";
 import { useQuery } from "@tanstack/react-query";
 import { createGroup, getChatUsers } from "../../api/actions";
 import useAppMutation from "../../hooks/useAppMutation";
-import { useForm } from "react-hook-form";
-import MessageInput from "./message-input";
-import FileInput from "./file-input";
-
-const top100Films = [
-  {
-    label: <UserCard />,
-    name: "Govind",
-  },
-];
+import { Controller, useForm } from "react-hook-form";
+import { array, object, string } from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 const defaultGroupValues = {
-  avatar: "",
   participants: [],
   name: "",
 };
 
-const CreateGroupModal = () => {
-  const { data } = useQuery({
+const groupCreateSchema = object({
+  participants: array().min(1, "There must be atleast one member"),
+  name: string().required("Please enter group name"),
+});
+
+const CreateGroupModal = ({ open = false, handleClose = () => null }) => {
+  const { data: users = [] } = useQuery({
     queryFn: getChatUsers,
     queryKey: "getChatUsers",
-    select: (response) => response?.data,
+    select: (response) => response?.data?.users || [],
   });
+
   const {
     control,
     formState: { errors },
@@ -46,36 +48,37 @@ const CreateGroupModal = () => {
     trigger,
   } = useForm({
     defaultValues: defaultGroupValues,
-    // resolver: yupResolver(forgotPassSchema), //Make schema for validation
+    resolver: yupResolver(groupCreateSchema),
     mode: "onChange",
   });
 
   const { mutateAsync: createGroupAsync, isPending: creatingGroup } =
     useAppMutation({
-      mutaionFn: createGroup,
+      mutationFn: createGroup,
       mutationKey: "createGroup",
     });
 
-  const userOptions = data?.map((user) => ({
-    label: (
-      <UserCard
-        key={user.id}
-        name={user?.name}
-        avatar={user?.avatar}
-        isActive={user.isActive}
-      />
-    ),
-    name: user.name,
-  })); // Use these options in auto complete
+  const handleGroupSubmit = (values) => {
+    const payload = {
+      name: values?.name,
+      participants: values?.participants?.map((p) => p?.id),
+    };
+    createGroupAsync(payload, {
+      onSuccess: () => {
+        handleClose();
+      },
+    });
+  };
 
   return (
     <Modal
-      open={true}
+      open={open}
       sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
       }}
+      onClose={handleClose}
     >
       <Sheet
         variant="outlined"
@@ -86,42 +89,76 @@ const CreateGroupModal = () => {
           boxShadow: "lg",
           width: "100%",
           minWidth: "500px",
+          // mt: 4,
         }}
       >
-        {/* <ModalClose variant="plain" sx={{ m: 2 }} /> */}
-        <Stack gap={1}>
+        <Stack
+          gap={1}
+          component={"form"}
+          onSubmit={handleSubmit(handleGroupSubmit)}
+        >
+          <Box m={1}>
+            <ModalClose variant="plain" disabled={creatingGroup} />
+          </Box>
+
           <Stack direction={"row"}>
             {/* Add option to upload avatar here */}
-            <Input placeholder="Group Name" fullWidth />
-          </Stack>
-          <Stack>
-            <Autocomplete
-              multiple
-              options={top100Films}
-              defaultValue={[top100Films[0]]}
-              renderTags={(tags, getTagProps) =>
-                tags.map((item, index) => (
-                  <Chip
-                    variant="solid"
-                    color="primary"
-                    endDecorator={<Close fontSize="sm" />}
-                    sx={{ minWidth: 0 }}
-                    {...getTagProps({ index })}
-                  >
-                    {item.name}
-                  </Chip>
-                ))
-              }
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <FormControl
+                  error={!!errors?.[`${field.name}`]?.message}
+                  sx={{ width: "100%" }}
+                >
+                  <Input placeholder="Group Name" fullWidth {...field} />
+                  <FormHelperText>{errors?.name?.message}</FormHelperText>
+                </FormControl>
+              )}
             />
           </Stack>
+          <Stack>
+            <FormControl error={errors?.participants?.message}>
+              <Autocomplete
+                multiple
+                options={users}
+                value={watch("participants") || []}
+                placeholder="Add Users"
+                renderTags={(tags, getTagProps) =>
+                  tags.map((item, index) => (
+                    <Chip
+                      variant="solid"
+                      color="primary"
+                      endDecorator={<Close fontSize="sm" />}
+                      sx={{ minWidth: 0 }}
+                      {...getTagProps({ index })}
+                    >
+                      {item?.username}
+                    </Chip>
+                  ))
+                }
+                onChange={(e, v) => {
+                  setValue("participants", v, {
+                    shouldValidate: true,
+                  });
+                }}
+                getOptionLabel={(option) => (
+                  <UserCard
+                    key={option.id}
+                    name={option?.username}
+                    avatar={option?.avatar}
+                    isActive={option.isActive}
+                  />
+                )}
+              />
+              <FormHelperText>{errors?.participants?.message}</FormHelperText>
+            </FormControl>
+          </Stack>
           <Stack sx={{ gap: 4, mt: 2 }}>
-            <Button type="button" fullWidth>
-              Create
+            <Button type="submit" disabled={creatingGroup} fullWidth>
+              {creatingGroup ? <CircularProgress /> : "Create"}
             </Button>
           </Stack>
-          {/* <Stack sx={{ gap: 4, mt: 2 }}>
-            <FileInput />
-          </Stack> */}
         </Stack>
       </Sheet>
     </Modal>

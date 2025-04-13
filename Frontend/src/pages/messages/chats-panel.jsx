@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 import Stack from "@mui/joy/Stack";
 import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
@@ -11,12 +11,18 @@ import { useSelector } from "react-redux";
 import UserListItem from "./user-list-item";
 import { toggleMessagesPane } from "../../utils";
 import ChatListItem from "./chat-list-item";
+import CreateGroupModal from "./create-group-modal";
 
 export default function ChatsPane() {
+  const [groupModal, setGroupModal] = useState(false);
   const {
     chat: { chats = [] },
     user: { user = {} },
   } = useSelector((state) => state);
+
+  const handleGroupModal = () => {
+    setGroupModal(false);
+  };
 
   return (
     <Sheet
@@ -63,6 +69,7 @@ export default function ChatsPane() {
           color="neutral"
           size="sm"
           sx={{ display: { xs: "none", sm: "unset" } }}
+          onClick={() => setGroupModal(true)}
         >
           <EditNoteRoundedIcon />
         </IconButton>
@@ -101,6 +108,7 @@ export default function ChatsPane() {
             return <ChatListItem key={id} chat={chat} />;
           })}
       </List>
+      <CreateGroupModal open={groupModal} handleClose={handleGroupModal} />
     </Sheet>
   );
 }

@@ -32,6 +32,7 @@ import {
 } from "@mui/joy";
 import { useQueryClient } from "@tanstack/react-query";
 import VisuallyHiddenInput from "./VisuallyHiddenInput";
+import AvatarWithStatus from "./AvatarWithStatus";
 
 export default function Sidebar() {
   const inputRef = useRef(null);
@@ -71,6 +72,7 @@ export default function Sidebar() {
 
   const {
     user: { user = {} },
+    chat: { socketStatus },
   } = useSelector((state) => state);
   const { avatar, username, email } = user || {};
 
@@ -220,7 +222,13 @@ export default function Sidebar() {
           }}
           onClick={handleFileClick}
         >
-          <Avatar variant="outlined" size="sm" src={avatar} />
+          <AvatarWithStatus
+            variant="outlined"
+            size="sm"
+            src={avatar}
+            online={socketStatus === "connected"}
+          />
+          {/* <Avatar  /> */}
           <VisuallyHiddenInput
             type="file"
             ref={inputRef}

@@ -1,4 +1,7 @@
+const { ChatModel } = require("../models/Chat.modal");
+const { FileModel } = require("../models/File.modal");
 const { getAllUsers } = require("../services/user.services");
+const { toObjectId } = require("../utils");
 
 const getAllUsersController = async (req, res) => {
   try {
@@ -9,11 +12,64 @@ const getAllUsersController = async (req, res) => {
   }
 };
 
-const createGroupController = async (req, res) => { // Refactor it
+const getGroupMembers = async (req, res) => {
   try {
-    const { participants, name, avatar } = req.body;
-    const chat = await createChat('group', participants);
-    res.status(200).json({ message: "Group created successfully", users });
+    const { chatId } = req.body;
+    const [members] = await ChatModel.aggregate([
+      {
+        $match: {
+          _id: toObjectId(chatId),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "participants",
+          foreignField: "_id",
+          as: "members",
+        },
+      },
+      {
+        $project: {
+          participants: 0,
+        },
+      },
+    ]);
+    res.status(200).json({ message: "Group members sent", members });
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Something went wrong" });
+  }
+};
+
+const createGroupController = async (req, res) => {
+  try {
+    const { participants, name = "", avatarFileId = "" } = req.body;
+    const userId = req.locals?.user?._id;
+    const uniqueParticipants = [...new Set([...participants, userId])];
+    const group = new ChatModel({
+      type: "group",
+      participants: uniqueParticipants.map((participant) =>
+        toObjectId(participant)
+      ),
+      admin: [toObjectId(userId)],
+    });
+    if (avatarFileId) {
+      const file = await FileModel.findById(avatarFileId);
+      if (file) {
+        group.avatar.key = file.storageKey;
+        group.avatar.url = file.url;
+        group.avatar.urlExpiry = file.urlExpiry;
+      }
+    }
+    if (!name) {
+      //TODO: Concatenate all participants name to make group name with ,
+    } else {
+      group.name = name;
+    }
+    await group.save();
+    res
+      .status(200)
+      .json({ message: "Group created successfully", groupId: group?._id });
   } catch (error) {
     res.status(400).json({ message: error.message || "Something went wrong" });
   }
@@ -21,5 +77,6 @@ const createGroupController = async (req, res) => { // Refactor it
 
 module.exports = {
   getAllUsersController,
-  createGroupController
+  createGroupController,
+  getGroupMembers,
 };
