@@ -1,5 +1,6 @@
 const { ChatModel } = require("../models/Chat.modal");
 const { FileModel } = require("../models/File.modal");
+const { getChatHistory } = require("../services/chat.services");
 const { getAllUsers } = require("../services/user.services");
 const { toObjectId } = require("../utils");
 
@@ -75,8 +76,24 @@ const createGroupController = async (req, res) => {
   }
 };
 
+const getChatMessages = async (req, res) => {
+  try {
+    const { chatId, offset, limit } = req.body;
+    const messages = await getChatHistory(chatId, offset, limit);
+    return res
+      .status(200)
+      .json({
+        message: "Messages sent successfully",
+        messages,
+        limit,
+        items: messages?.length,
+      });
+  } catch (error) {}
+};
+
 module.exports = {
   getAllUsersController,
   createGroupController,
   getGroupMembers,
+  getChatMessages
 };

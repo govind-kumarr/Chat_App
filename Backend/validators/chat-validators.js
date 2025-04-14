@@ -10,10 +10,13 @@ const createGroupSchema = Yup.object().shape({
   avatarFileId: Yup.string().optional(),
 });
 
-const getGroupMembersSchema = Yup.object().shape({
+const getChatMessagesSchema = Yup.object().shape({
   chatId: Yup.string(),
+  offset: Yup.number(),
+  limit: Yup.number(),
 });
 module.exports = {
   createGroupSchema,
   getGroupMembersSchema,
+  getChatMessagesSchema
 };

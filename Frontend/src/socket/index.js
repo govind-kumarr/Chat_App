@@ -35,8 +35,9 @@ class SocketService {
       socketEventEmitter.emit("chats", data);
     });
 
-    SocketService.socket.on("new-message", (data) => {
+    SocketService.socket.on("new-message", (data, cb) => {
       socketEventEmitter.emit("new-message", data);
+      cb({status: 'recieved'})
     });
 
     SocketService.socket.on("reconnect", (data) => {

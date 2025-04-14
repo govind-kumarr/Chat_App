@@ -1,3 +1,4 @@
+const { MessageModel } = require("../models/Message.modal");
 const {
   getChatHistory,
   getSocket,
@@ -63,6 +64,17 @@ class SocketManager {
         console.log(`Error: ${error?.message}`);
       }
     });
+    this.socket.on("message-seen", async (data, cb) => {
+      try {
+        const { messageIds } = data;
+        if (Array.isArray(messageIds)) {
+          await markMessagesSeen(messageIds);
+        }
+      } catch (error) {
+        console.log(`Error marking messages seen: ${error?.message}`);
+
+      }
+    });
     this.socket.on("disconnecting", this.handleDisconnecting);
     this.socket.on("disconnect", this.handleDisconnect);
   }
@@ -104,7 +116,18 @@ class SocketManager {
       const sendersSocket = populatedMessage?.sender?.socketId;
       const recieversSocket = populatedMessage?.recipient?.socketId;
       io.to(sendersSocket).emit("new-message", populatedMessage);
-      io.to(recieversSocket).emit("new-message", populatedMessage);
+      io.to(recieversSocket).emit(
+        "new-message",
+        populatedMessage,
+        async (res) => {
+          if (res) {
+            const { status } = res;
+            if (status == "recieved") {
+              await changeMessageStatus(messageId, "delivered");
+            }
+          }
+        }
+      );
     }
   }
 

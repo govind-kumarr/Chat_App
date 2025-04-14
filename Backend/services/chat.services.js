@@ -10,7 +10,7 @@ const {
 } = require("../utils");
 const { createFile } = require("./file.services");
 
-const getChatHistory = async (chatId) => {
+const getChatHistory = async (chatId, offset, limit) => {
   try {
     const chat = await MessageModel.aggregate([
       {
@@ -73,6 +73,12 @@ const getChatHistory = async (chatId) => {
         $sort: {
           createdAt: 1,
         },
+      },
+      {
+        $skip: offset,
+      },
+      {
+        $limit: limit,
       },
     ]);
     return chat;
@@ -199,6 +205,25 @@ const addMessage = async (senderId, data) => {
     await message.save();
     return { id: message?._id };
   }
+};
+
+const changeMessageStatus = async (messageId, status) => {
+  try {
+    const message = await MessageModel.findById(messageId);
+    if (message) {
+      message.status = status;
+      message.save();
+    }
+  } catch (error) {
+    console.error(`Error changing status of message: ${error?.message}`);
+  }
+};
+
+const markMessagesSeen = async (messageIds = []) => {
+  await MessageModel.updateMany(
+    { _id: { $in: messageIds.map((id) => toObjectId(id)) } },
+    { status: "seen" }
+  );
 };
 
 const getSocket = async (id = "") => {
@@ -369,4 +394,6 @@ module.exports = {
   createChat,
   findChat,
   prepareChats,
+  changeMessageStatus,
+  markMessagesSeen,
 };
