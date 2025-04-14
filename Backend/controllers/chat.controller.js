@@ -80,20 +80,21 @@ const getChatMessages = async (req, res) => {
   try {
     const { chatId, offset, limit } = req.body;
     const messages = await getChatHistory(chatId, offset, limit);
-    return res
-      .status(200)
-      .json({
-        message: "Messages sent successfully",
-        messages,
-        limit,
-        items: messages?.length,
-      });
+    return res.status(200).json({
+      message: "Messages sent successfully",
+      messages,
+      limit,
+      items: messages?.length,
+    });
   } catch (error) {}
 };
+
+const getUnreadCount = async (req, res) => {};
 
 module.exports = {
   getAllUsersController,
   createGroupController,
   getGroupMembers,
-  getChatMessages
+  getChatMessages,
+  getUnreadCount
 };

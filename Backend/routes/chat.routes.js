@@ -4,6 +4,7 @@ const {
   createGroupController,
   getGroupMembers,
   getChatMessages,
+  getUnreadCount,
 } = require("../controllers/chat.controller");
 const { validateRequest } = require("../middlewares/validate-request");
 const {
@@ -14,6 +15,11 @@ const {
 
 const router = Router();
 router.get("/users", getAllUsersController);
+router.post(
+  "/unread-count",
+  validateRequest(getChatMessagesSchema),
+  getUnreadCount
+);
 router.post(
   "/messages",
   validateRequest(getChatMessagesSchema),
