@@ -1,4 +1,6 @@
 import { apiClient } from "./api/axiosInstance";
+import { ROUTES } from "./api/routes";
+import { envVars } from "./getEnv";
 
 export function openSidebar() {
   if (typeof window !== "undefined") {
@@ -174,3 +176,23 @@ export const handleDownload = async (
     console.error("Download failed:", error);
   }
 };
+
+export function getGoogleOAuthURL() {
+  const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+
+  const options = {
+    redirect_uri: `${envVars.SERVER_URL}${ROUTES.GOOGLE_LOGIN.URL}`,
+    client_id: envVars.GOOGLE_CLIENT_ID,
+    access_type: "offline",
+    response_type: "code",
+    prompt: "consent",
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ].join(" "),
+  };
+
+  const qs = new URLSearchParams(options);
+
+  return `${rootUrl}?${qs.toString()}`;
+}

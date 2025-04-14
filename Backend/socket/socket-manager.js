@@ -72,7 +72,6 @@ class SocketManager {
         }
       } catch (error) {
         console.log(`Error marking messages seen: ${error?.message}`);
-
       }
     });
     this.socket.on("disconnecting", this.handleDisconnecting);

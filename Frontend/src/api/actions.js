@@ -101,6 +101,14 @@ const createGroup = (data) => {
   });
 };
 
+const getChatMessages = (data) => {
+  return apiClient({
+    url: ROUTES.GET_CHAT_MESSAGES.URL,
+    method: ROUTES.GET_CHAT_MESSAGES.METHOD,
+    data,
+  });
+};
+
 const uploadFile = (url, data, mimeType) => {
   return apiClient({
     baseURL: url,
@@ -128,4 +136,5 @@ export {
   createGroup,
   getGroupMembers,
   deleteFile,
+  getChatMessages,
 };

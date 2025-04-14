@@ -71,7 +71,7 @@ const getChatHistory = async (chatId, offset, limit) => {
       },
       {
         $sort: {
-          createdAt: 1,
+          createdAt: -1,
         },
       },
       {
@@ -81,7 +81,7 @@ const getChatHistory = async (chatId, offset, limit) => {
         $limit: limit,
       },
     ]);
-    return chat;
+    return chat?.reverse();
   } catch (error) {
     console.error(`Error getting chat history: ${error?.message}`);
   }

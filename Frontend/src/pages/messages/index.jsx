@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import ChatsPanel from "./chats-panel";
 import { SocketService } from "../../socket";
@@ -11,15 +11,14 @@ import {
   setChats,
   setSocketStatus,
 } from "../../store/chat";
-import MessagePanel from "./message-panel";
-import ChatBubble from "../../components/ChatBubble";
 import Profile from "./profile-section";
+import MessagesPanelNew from "./messages-panel-new";
 
 const Messages = () => {
   const dispatch = useDispatch();
   const {
     user: { user },
-    chat: { activeChat, chats, activeChatMessages, showProfile },
+    chat: { activeChat, chats, showProfile },
   } = useSelector((state) => state);
 
   useEffect(() => {
@@ -56,12 +55,11 @@ const Messages = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (activeChat) SocketService.getChatHistory(activeChat);
-  }, [activeChat]);
+  // useEffect(() => {
+  //   if (activeChat) SocketService.getChatHistory(activeChat);
+  // }, [activeChat]);
 
   useEffect(() => {
-    console.log({ chats });
     if (chats?.length > 0 && !activeChat) {
       const [chat] = chats.filter((c) => c?.id != user?.id);
       dispatch(setActiveChat(chat?.id));
@@ -86,17 +84,9 @@ const Messages = () => {
     >
       {!showProfile && <ChatsPanel />}
       {chats?.length > 0 &&
-        activeChat &&
-        chats?.map((chat) => {
-          return (
-            <MessagePanel
-              key={chat.id}
-              chat={chat}
-              chatMessages={chat.id === activeChat ? activeChatMessages : []}
-              show={chat.id === activeChat}
-            />
-          );
-        })}
+        chats?.map((chat) => (
+          <MessagesPanelNew key={chat.id} chatId={chat.id} />
+        ))}
       {showProfile && <Profile />}
     </Sheet>
   );

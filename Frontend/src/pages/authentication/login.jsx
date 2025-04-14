@@ -22,6 +22,8 @@ import { useDispatch } from "react-redux";
 import { showSnackbar } from "../../store/snackbar";
 import GoogleIcon from "../../assets/icons";
 import useAppMutation from "../../hooks/useAppMutation";
+import { ROUTES } from "../../api/routes";
+import { getGoogleOAuthURL } from "../../utils";
 
 const defaultLoginValues = {
   email: "",
@@ -130,6 +132,9 @@ const Login = () => {
               color="neutral"
               fullWidth
               startDecorator={<GoogleIcon />}
+              onClick={() => {
+                window.location.href = getGoogleOAuthURL();
+              }}
             >
               Continue with Google
             </Button>
