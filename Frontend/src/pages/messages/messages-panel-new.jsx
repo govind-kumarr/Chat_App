@@ -87,7 +87,7 @@ const MessagesPanelNew = ({ chatId }) => {
               {Object.keys(groupedMessages).map((date) => {
                 const messages = groupedMessages[date];
                 return (
-                  <>
+                  <React.Fragment key={date}>
                     <Divider>{date}</Divider>
                     {messages?.length > 0 &&
                       messages.map((message, index) => {
@@ -116,7 +116,7 @@ const MessagesPanelNew = ({ chatId }) => {
                           </Stack>
                         );
                       })}
-                  </>
+                  </React.Fragment>
                 );
               })}
             </Stack>

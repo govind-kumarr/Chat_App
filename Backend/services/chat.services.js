@@ -366,6 +366,7 @@ const prepareChats = async (userId) => {
           lastMessageContent: {
             $ifNull: ["$lastMessage.content", null],
           },
+          participants: 1
         },
       },
       {
@@ -374,6 +375,8 @@ const prepareChats = async (userId) => {
         },
       },
     ]);
+
+    // Find group participant
 
     const finalResult = chats.concat(groups).sort((a, b) => {
       const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
@@ -386,6 +389,26 @@ const prepareChats = async (userId) => {
   }
 };
 
+const getUserGroups = async (userId) => {
+  const [response] = await ChatModel.aggregate([
+    {
+      $match: {
+        participants: { $in: [toObjectId(userId)] },
+        type: "group",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        groupIds: {
+          $push: { $toString: "$_id" },
+        },
+      },
+    },
+  ]);
+  return response?.groupIds || [];
+};
+
 module.exports = {
   getChatHistory,
   getSocket,
@@ -396,4 +419,5 @@ module.exports = {
   prepareChats,
   changeMessageStatus,
   markMessagesSeen,
+  getUserGroups,
 };
