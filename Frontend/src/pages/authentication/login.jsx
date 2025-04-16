@@ -57,7 +57,6 @@ const Login = () => {
     resolver: yupResolver(loginSchema),
   });
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const { mutate: loginMutate, isPending: loginPending } = useAppMutation({
     mutationFn: loginUser,

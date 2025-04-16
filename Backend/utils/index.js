@@ -11,6 +11,7 @@ const getUserFromGoogleRes = (googleUser = {}) => {
     email: googleUser.email,
     password,
     avatar: googleUser.picture,
+    authMethod: "google",
   };
 
   return newUser;

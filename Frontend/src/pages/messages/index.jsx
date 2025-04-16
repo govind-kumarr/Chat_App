@@ -13,20 +13,25 @@ import {
 } from "../../store/chat";
 import Profile from "./profile-section";
 import MessagesPanelNew from "./messages-panel-new";
+import { useQuery } from "@tanstack/react-query";
+import { getChats } from "../../api/actions";
 
 const Messages = () => {
   const dispatch = useDispatch();
   const {
     user: { user },
-    chat: { activeChat, chats, showProfile },
+    chat: { activeChat, showProfile, chats },
   } = useSelector((state) => state);
+
+  const { isLoading: chatsLoading, data: chatsResponse } = useQuery({
+    queryKey: "getChats",
+    queryFn: getChats,
+    select: (response) => response?.data?.chats,
+    // enabled: chats?.length === 0,
+  });
 
   useEffect(() => {
     SocketService.connect();
-
-    socketEventEmitter.on("chats", (data) => {
-      dispatch(setChats(data?.chats));
-    });
 
     socketEventEmitter.on("chat-history", (data) => {
       dispatch(setChatMessages(data));
@@ -55,9 +60,15 @@ const Messages = () => {
     });
   }, []);
 
-  // useEffect(() => {
-  //   if (activeChat) SocketService.getChatHistory(activeChat);
-  // }, [activeChat]);
+  useEffect(() => {
+    if (
+      chatsResponse &&
+      Array.isArray(chatsResponse) &&
+      chatsResponse?.length > 0
+    ) {
+      dispatch(setChats(chatsResponse));
+    }
+  }, [chatsResponse]);
 
   useEffect(() => {
     if (chats?.length > 0 && !activeChat) {
@@ -83,7 +94,8 @@ const Messages = () => {
       }}
     >
       {!showProfile && <ChatsPanel />}
-      {chats?.length > 0 &&
+      {!chatsLoading &&
+        chats?.length > 0 &&
         chats?.map((chat) => (
           <MessagesPanelNew key={chat.id} chatId={chat.id} />
         ))}

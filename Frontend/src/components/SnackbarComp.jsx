@@ -2,11 +2,13 @@ import React from "react";
 import Snackbar from "@mui/joy/Snackbar";
 import { useDispatch, useSelector } from "react-redux";
 import { hideSnackbar } from "../store/snackbar";
-import { Button, IconButton } from "@mui/joy";
+import { IconButton, Typography, Stack } from "@mui/joy";
 import { Close } from "@mui/icons-material";
 
 const SnackbarComp = () => {
-  const { open, message, variant } = useSelector((state) => state.snackbar);
+  const { open, variant, title, description } = useSelector(
+    (state) => state.snackbar
+  );
   const dispatch = useDispatch();
 
   return (
@@ -17,17 +19,22 @@ const SnackbarComp = () => {
       color={variant}
       onClose={() => dispatch(hideSnackbar())}
       endDecorator={
-        <IconButton
-          onClick={() => dispatch(hideSnackbar())}
-          size="sm"
-          variant="plain"
-          color={variant}
-        >
-          <Close />
-        </IconButton>
+        <Stack justifyContent={"start"}>
+          <IconButton
+            onClick={() => dispatch(hideSnackbar())}
+            size="sm"
+            variant="plain"
+            color={variant}
+          >
+            <Close />
+          </IconButton>
+        </Stack>
       }
     >
-      {message}
+      <div>
+        <Typography>{title}</Typography>
+        <Typography sx={{ mt: 1, mb: 2 }}>{description}</Typography>
+      </div>
     </Snackbar>
   );
 };

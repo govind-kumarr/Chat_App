@@ -11,3 +11,8 @@ export const fileTypeMap = {
   video: <SmartDisplayIcon />,
   other: <InsertDriveFileIcon />,
 };
+
+export const authCodeMessageMap = {
+  email_already_registered: "This email is already registered!",
+  server_error: "Server is unable to process this request!",
+};

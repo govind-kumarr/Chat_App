@@ -5,6 +5,7 @@ const {
   getGroupMembers,
   getChatMessages,
   getUnreadCount,
+  getAllChats,
 } = require("../controllers/chat.controller");
 const { validateRequest } = require("../middlewares/validate-request");
 const {
@@ -14,6 +15,8 @@ const {
 } = require("../validators/chat-validators");
 
 const router = Router();
+
+router.get("/", getAllChats);
 router.get("/users", getAllUsersController);
 router.post(
   "/unread-count",

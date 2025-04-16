@@ -40,8 +40,8 @@ const userRegister = async (req, res) => {
 const userLogin = async (req, res) => {
   try {
     const userDetails = await verifyUser(req.body);
-    if(userDetails && userDetails?.authMethod !== 'email') {
-      throw new Error('Different login method')
+    if (userDetails && userDetails?.authMethod !== "email") {
+      throw new Error("Different login method");
     }
     const session = await createSession(userDetails?._id);
     attachSession(res, session?._id);
@@ -57,25 +57,33 @@ const userLogout = async (req, res) => {
 };
 
 const googleAuthHandler = async (req, res) => {
-  const code = req.query.code;
-  // get id_token and access_token
-  const { id_token, access_token } = await getGoogleOAuthTokens({ code });
-  // Retrieve user from id_token and access_token
-  const googleUser = await getGoogleUser({ id_token, access_token });
+  try {
+    const code = req.query.code;
+    // get id_token and access_token
+    const { id_token, access_token } = await getGoogleOAuthTokens({ code });
+    // Retrieve user from id_token and access_token
+    const googleUser = await getGoogleUser({ id_token, access_token });
 
-  if (!googleUser.verified_email)
-    res.status(401).send("Email is not verified!");
+    if (!googleUser.verified_email)
+      res.status(401).send("Email is not verified!");
 
-  const userData = getUserFromGoogleRes(googleUser);
-  let user = await doUserExist(userData?.email);
-  if (!user) {
-    user = await createUser(userData);
-  } else if (user.authMethod === "google") {
-    const session = await createSession(user._id);
+    const userData = getUserFromGoogleRes(googleUser);
+    let user = await doUserExist(userData?.email);
+    if (user && user?.authMethod !== "google") {
+      res.redirect(`${app_url}/auth?error=email_already_registered`);
+      return;
+    }
+
+    if (!user) {
+      user = await createUser(userData);
+    }
+
+    const session = await createSession(user.id);
     attachSession(res, session?._id);
     res.redirect(app_url);
-  } else {
-    res.redirect(`${app_url}/auth?error=email_already_registered`);
+  } catch (error) {
+    console.log(`Error authenticating google user: ${error?.message}`);
+    res.redirect(`${app_url}/auth?error=server_error`);
   }
 };
 

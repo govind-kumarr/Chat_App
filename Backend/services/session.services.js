@@ -1,4 +1,5 @@
 const { SessionModel } = require("../models/Session.modal");
+const { toObjectId } = require("../utils");
 
 const accessTokenCookieOptions = {
   maxAge: 1000 * 24 * 60 * 60, // 1 day
@@ -10,7 +11,7 @@ const accessTokenCookieOptions = {
 };
 
 const createSession = async (user_id) => {
-  const session = await SessionModel.create({ user: user_id });
+  const session = await SessionModel.create({ user: toObjectId(user_id) });
   return session.toJSON();
 };
 

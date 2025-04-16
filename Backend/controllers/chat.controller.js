@@ -1,6 +1,6 @@
 const { ChatModel } = require("../models/Chat.modal");
 const { FileModel } = require("../models/File.modal");
-const { getChatHistory } = require("../services/chat.services");
+const { getChatHistory, prepareChats } = require("../services/chat.services");
 const { getAllUsers } = require("../services/user.services");
 const { toObjectId } = require("../utils");
 
@@ -91,6 +91,19 @@ const getChatMessages = async (req, res) => {
   }
 };
 
+const getAllChats = async (req, res) => {
+  try {
+    const userId = req.locals?.user?.id;
+    const chats = await prepareChats(userId);
+    return res.status(200).json({
+      message: "Chats sent successfully",
+      chats,
+    });
+  } catch (error) {
+    console.error(`Error getting chat messages: ${error?.message}`);
+  }
+};
+
 const getUnreadCount = async (req, res) => {};
 
 module.exports = {
@@ -99,4 +112,5 @@ module.exports = {
   getGroupMembers,
   getChatMessages,
   getUnreadCount,
+  getAllChats,
 };

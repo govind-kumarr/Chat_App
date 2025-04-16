@@ -14,7 +14,7 @@ import {
 } from "@mui/joy";
 import Close from "@mui/icons-material/Close";
 import UserCard from "./user-card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createGroup, getChatUsers } from "../../api/actions";
 import useAppMutation from "../../hooks/useAppMutation";
 import { Controller, useForm } from "react-hook-form";
@@ -32,6 +32,7 @@ const groupCreateSchema = object({
 });
 
 const CreateGroupModal = ({ open = false, handleClose = () => null }) => {
+  const queryClient = useQueryClient();
   const { data: users = [] } = useQuery({
     queryFn: getChatUsers,
     queryKey: "getChatUsers",
@@ -64,8 +65,13 @@ const CreateGroupModal = ({ open = false, handleClose = () => null }) => {
       participants: values?.participants?.map((p) => p?.id),
     };
     createGroupAsync(payload, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        await queryClient.refetchQueries({
+          queryKey: ["getChats"],
+          exact: false,
+        });
         handleClose();
+        reset(defaultGroupValues);
       },
     });
   };

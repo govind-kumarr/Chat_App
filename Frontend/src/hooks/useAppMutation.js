@@ -10,7 +10,7 @@ const useAppMutation = ({ mutationFn, mutationKey, ...config }) => {
     onSuccess: (response) => {
       dispatch(
         showSnackbar({
-          message: response?.data?.message || "Success",
+          title: response?.data?.message || "Success",
           variant: "success",
         })
       );
@@ -21,7 +21,7 @@ const useAppMutation = ({ mutationFn, mutationKey, ...config }) => {
       console.log({ error });
       dispatch(
         showSnackbar({
-          message: error?.response?.data?.message || "Something went wrong!",
+          title: error?.response?.data?.message || "Something went wrong!",
           variant: "danger",
         })
       );
