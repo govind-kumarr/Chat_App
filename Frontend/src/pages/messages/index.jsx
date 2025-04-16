@@ -24,7 +24,7 @@ const Messages = () => {
   } = useSelector((state) => state);
 
   const { isLoading: chatsLoading, data: chatsResponse } = useQuery({
-    queryKey: "getChats",
+    queryKey: ["getChats"],
     queryFn: getChats,
     select: (response) => response?.data?.chats,
     // enabled: chats?.length === 0,
@@ -71,7 +71,10 @@ const Messages = () => {
   }, [chatsResponse]);
 
   useEffect(() => {
-    if (chats?.length > 0 && !activeChat) {
+    if (
+      chats?.length > 0 &&
+      (!activeChat || !chats?.includes((chat) => chat?.id === activeChat))
+    ) {
       const [chat] = chats.filter((c) => c?.id != user?.id);
       dispatch(setActiveChat(chat?.id));
     }

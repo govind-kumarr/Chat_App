@@ -6,6 +6,7 @@ const {
   getChatMessages,
   getUnreadCount,
   getAllChats,
+  deleteChat,
 } = require("../controllers/chat.controller");
 const { validateRequest } = require("../middlewares/validate-request");
 const {
@@ -17,6 +18,7 @@ const {
 const router = Router();
 
 router.get("/", getAllChats);
+router.delete("/", validateRequest(getChatMessagesSchema), deleteChat);
 router.get("/users", getAllUsersController);
 router.post(
   "/unread-count",

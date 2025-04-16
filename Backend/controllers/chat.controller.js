@@ -1,6 +1,10 @@
 const { ChatModel } = require("../models/Chat.modal");
 const { FileModel } = require("../models/File.modal");
-const { getChatHistory, prepareChats } = require("../services/chat.services");
+const {
+  getChatHistory,
+  prepareChats,
+  doChatExist,
+} = require("../services/chat.services");
 const { getAllUsers } = require("../services/user.services");
 const { toObjectId } = require("../utils");
 
@@ -88,6 +92,7 @@ const getChatMessages = async (req, res) => {
     });
   } catch (error) {
     console.error(`Error getting chat messages: ${error?.message}`);
+    res.status(400).json({ message: error.message || "Something went wrong" });
   }
 };
 
@@ -101,6 +106,26 @@ const getAllChats = async (req, res) => {
     });
   } catch (error) {
     console.error(`Error getting chat messages: ${error?.message}`);
+    res.status(400).json({ message: error.message || "Something went wrong" });
+  }
+};
+
+const deleteChat = async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    const userId = req.locals?.user?.id;
+    const chat = await doChatExist(chatId);
+    if (!chat || (chat && chat?.type !== "group"))
+      throw new Error("Group doesn't exist");
+    if (!chat.admin?.[0]?.equals(toObjectId(userId)))
+      throw new Error("You are not admin of this group");
+    await chat.deleteOne();
+    return res.status(200).json({
+      message: "Chat deleted successfully",
+    });
+  } catch (error) {
+    console.error(`Error getting chat messages: ${error?.message}`);
+    res.status(400).json({ message: error.message || "Something went wrong" });
   }
 };
 
@@ -113,4 +138,5 @@ module.exports = {
   getChatMessages,
   getUnreadCount,
   getAllChats,
+  deleteChat,
 };

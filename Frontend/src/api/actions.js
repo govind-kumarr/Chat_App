@@ -91,6 +91,13 @@ const getChats = () => {
     method: ROUTES.GET_CHATS.METHOD,
   });
 };
+const deleteChat = (data) => {
+  return apiClient({
+    url: ROUTES.DELETE_CHAT.URL,
+    method: ROUTES.DELETE_CHAT.METHOD,
+    data,
+  });
+};
 
 const getGroupMembers = (data) => {
   return apiClient({
@@ -145,4 +152,5 @@ export {
   deleteFile,
   getChatMessages,
   getChats,
+  deleteChat,
 };

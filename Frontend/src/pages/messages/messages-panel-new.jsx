@@ -17,25 +17,67 @@ const MessagesPanelNew = ({ chatId }) => {
     chat: { activeChat },
   } = useSelector((state) => state);
 
+  const allMessagesRef = useRef(allMessages);
+  const fetchingNextBatch = useRef(false);
+  const hasMore = useRef(true);
   const messageContainerRef = useRef(null);
-  const { isPending, mutate: getChatMessageMutate } = useMutation({
-    mutationFn: getChatMessages,
-    mutationKey: "getChatMessages",
-    onSuccess: (response) => {
-      setAllMessages((prev) => [...prev, ...(response?.data?.messages || [])]);
-    },
-  });
+  const scrollRef = useRef(null);
+
+  const { isPending: gettingChatMessages, mutate: getChatMessageMutate } =
+    useMutation({
+      mutationFn: getChatMessages,
+      mutationKey: "getChatMessages",
+      onSuccess: (response) => {
+        if (Array.isArray(response?.data?.messages)) {
+          if (response?.data?.messages?.length > 0) {
+            setAllMessages((prev) => [
+              ...(response?.data?.messages || []),
+              ...prev,
+            ]);
+            hasMore.current = true;
+          } else {
+            hasMore.current = false;
+          }
+          if (fetchingNextBatch.current) {
+            setTimeout(() => {
+              fetchingNextBatch.current = false;
+            }, 2000);
+          }
+        }
+      },
+    });
 
   const groupedMessages =
-    !isPending && allMessages ? getGroupMessages(allMessages) : {};
+    !gettingChatMessages && allMessages ? getGroupMessages(allMessages) : {};
 
   const fetchNextBatch = () => {
-    const offset = allMessages.length;
-    getChatMessageMutate({
-      offset,
-      chatId,
-    });
+    console.log(`scroll- ${scrollRef.current}`);
+    if (!gettingChatMessages && hasMore.current && !fetchingNextBatch.current) {
+      fetchingNextBatch.current = true;
+      const offset = allMessagesRef.current;
+      console.log(
+        `Time to fetch next batch. Current messages length: ${offset}`
+      );
+      getChatMessageMutate({
+        offset,
+        chatId,
+      });
+    }
   };
+
+  useEffect(() => {
+    allMessagesRef.current = allMessages?.length;
+    const el = messageContainerRef.current;
+    console.log(`scroll ${scrollRef.current}`);
+
+    if (scrollRef.current > 0 && el) {
+      el.scrollTop = scrollRef.current;
+    }
+
+    if (allMessages.length <= 10 && el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [allMessages]);
 
   useEffect(() => {
     if (!allMessages?.length) {
@@ -47,8 +89,9 @@ const MessagesPanelNew = ({ chatId }) => {
 
     const handleScroll = () => {
       const { scrollTop } = el;
+      scrollRef.current = scrollTop;
       if (scrollTop <= 10) {
-        // fetchNextBatch();
+        fetchNextBatch();
       }
     };
 

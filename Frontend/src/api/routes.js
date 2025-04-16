@@ -47,6 +47,10 @@ export const ROUTES = {
     URL: "/api/chat",
     METHOD: "GET",
   },
+  DELETE_CHAT: {
+    URL: "/api/chat",
+    METHOD: "DELETE",
+  },
   CHAT_USERS: {
     URL: "/api/chat/users",
     METHOD: "GET",

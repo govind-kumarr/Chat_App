@@ -89,7 +89,15 @@ const getChatHistory = async (chatId, offset, limit) => {
 
 const createChat = async (type, participants) => {
   try {
-    if (participants?.length > 2) {
+    if (type === "personal" && participants?.length === 2) {
+      const chat = new ChatModel({
+        type,
+        participants,
+      });
+      await chat.save();
+      return chat;
+    }
+    if (type === "group" && participants?.length >= 2) {
       const chat = new ChatModel({
         type,
         participants,
@@ -366,7 +374,7 @@ const prepareChats = async (userId) => {
           lastMessageContent: {
             $ifNull: ["$lastMessage.content", null],
           },
-          participants: 1
+          participants: 1,
         },
       },
       {
@@ -409,6 +417,27 @@ const getUserGroups = async (userId) => {
   return response?.groupIds || [];
 };
 
+const isGroupAdmin = async (chatId, userId) => {
+  try {
+    const chat = await ChatModel.findById(chatId);
+    if (chat) {
+      return chat.admin[0].equals(toObjectId(userId)) ? chat : false;
+    }
+    return false;
+  } catch (error) {
+    console.log(`Error checking chat admin: ${error?.message}`);
+  }
+};
+
+const doChatExist = async (chatId) => {
+  try {
+    const chat = await ChatModel.findById(chatId);
+    return chat;
+  } catch (error) {
+    console.log(`Error checking chat exist: ${error?.message}`);
+  }
+};
+
 module.exports = {
   getChatHistory,
   getSocket,
@@ -420,4 +449,6 @@ module.exports = {
   changeMessageStatus,
   markMessagesSeen,
   getUserGroups,
+  isGroupAdmin,
+  doChatExist,
 };
