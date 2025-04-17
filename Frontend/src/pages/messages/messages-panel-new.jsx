@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Box, Divider, Sheet, Stack, Typography } from "@mui/joy";
 import { useSelector } from "react-redux";
 
@@ -21,29 +21,24 @@ const MessagesPanelNew = ({ chatId }) => {
   const fetchingNextBatch = useRef(false);
   const hasMore = useRef(true);
   const messageContainerRef = useRef(null);
-  const scrollRef = useRef(null);
+  const scrollRestoreOffset = useRef(null);
 
   const { isPending: gettingChatMessages, mutate: getChatMessageMutate } =
     useMutation({
       mutationFn: getChatMessages,
       mutationKey: "getChatMessages",
       onSuccess: (response) => {
-        if (Array.isArray(response?.data?.messages)) {
-          if (response?.data?.messages?.length > 0) {
-            setAllMessages((prev) => [
-              ...(response?.data?.messages || []),
-              ...prev,
-            ]);
-            hasMore.current = true;
-          } else {
-            hasMore.current = false;
-          }
-          if (fetchingNextBatch.current) {
-            setTimeout(() => {
-              fetchingNextBatch.current = false;
-            }, 2000);
-          }
+        const newMessages = response?.data?.messages || [];
+        if (newMessages.length > 0) {
+          setAllMessages((prev) => [...newMessages, ...prev]);
+          hasMore.current = true;
+        } else {
+          hasMore.current = false;
         }
+
+        setTimeout(() => {
+          fetchingNextBatch.current = false;
+        }, 500);
       },
     });
 
@@ -51,31 +46,37 @@ const MessagesPanelNew = ({ chatId }) => {
     !gettingChatMessages && allMessages ? getGroupMessages(allMessages) : {};
 
   const fetchNextBatch = () => {
-    console.log(`scroll- ${scrollRef.current}`);
     if (!gettingChatMessages && hasMore.current && !fetchingNextBatch.current) {
+      const el = messageContainerRef.current;
+      if (!el) return;
+
+      // Store offset from bottom before loading
+      scrollRestoreOffset.current = el.scrollHeight - el.scrollTop;
       fetchingNextBatch.current = true;
+
       const offset = allMessagesRef.current;
-      console.log(
-        `Time to fetch next batch. Current messages length: ${offset}`
-      );
-      getChatMessageMutate({
-        offset,
-        chatId,
-      });
+      getChatMessageMutate({ offset, chatId });
     }
   };
 
-  useEffect(() => {
-    allMessagesRef.current = allMessages?.length;
-    const el = messageContainerRef.current;
-    console.log(`scroll ${scrollRef.current}`);
+  useLayoutEffect(() => {
+    allMessagesRef.current = allMessages.length;
 
-    if (scrollRef.current > 0 && el) {
-      el.scrollTop = scrollRef.current;
+    const el = messageContainerRef.current;
+    if (!el) return;
+
+    // Scroll to bottom initially if short content
+    if (allMessages.length <= 10) {
+      el.scrollTop = el.scrollHeight;
+      return;
     }
 
-    if (allMessages.length <= 10 && el) {
-      el.scrollTop = el.scrollHeight;
+    if (scrollRestoreOffset.current != null) {
+      // Wait for next paint for smoother restoration
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight - scrollRestoreOffset.current;
+        scrollRestoreOffset.current = null;
+      });
     }
   }, [allMessages]);
 
@@ -88,18 +89,13 @@ const MessagesPanelNew = ({ chatId }) => {
     if (!el) return;
 
     const handleScroll = () => {
-      const { scrollTop } = el;
-      scrollRef.current = scrollTop;
-      if (scrollTop <= 10) {
+      if (el.scrollTop <= 10) {
         fetchNextBatch();
       }
     };
 
     el.addEventListener("scroll", handleScroll);
-
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-    };
+    return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -132,33 +128,29 @@ const MessagesPanelNew = ({ chatId }) => {
                 return (
                   <React.Fragment key={date}>
                     <Divider>{date}</Divider>
-                    {messages?.length > 0 &&
-                      messages.map((message, index) => {
-                        const { isActive, avatar, senderName } = message;
-                        const isYou = message?.senderId === user?.id;
-                        return (
-                          <Stack
-                            key={message?.id}
-                            direction="row"
-                            spacing={2}
-                            sx={{
-                              flexDirection: isYou ? "row-reverse" : "row",
-                            }}
-                          >
-                            {!isYou && (
-                              <AvatarWithStatus
-                                online={isActive}
-                                src={avatar}
-                              />
-                            )}
-                            <ChatBubble
-                              variant={isYou ? "sent" : "received"}
-                              {...message}
-                              sender={isYou ? "You" : senderName}
-                            />
-                          </Stack>
-                        );
-                      })}
+                    {messages.map((message) => {
+                      const { isActive, avatar, senderName } = message;
+                      const isYou = message?.senderId === user?.id;
+                      return (
+                        <Stack
+                          key={message?.id}
+                          direction="row"
+                          spacing={2}
+                          sx={{
+                            flexDirection: isYou ? "row-reverse" : "row",
+                          }}
+                        >
+                          {!isYou && (
+                            <AvatarWithStatus online={isActive} src={avatar} />
+                          )}
+                          <ChatBubble
+                            variant={isYou ? "sent" : "received"}
+                            {...message}
+                            sender={isYou ? "You" : senderName}
+                          />
+                        </Stack>
+                      );
+                    })}
                   </React.Fragment>
                 );
               })}
