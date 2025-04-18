@@ -42,8 +42,9 @@ const MessagesPanelNew = ({ chatId }) => {
       },
     });
 
-  const groupedMessages =
-    !gettingChatMessages && allMessages ? getGroupMessages(allMessages) : {};
+  const groupedMessages = allMessages?.length
+    ? getGroupMessages(allMessages)
+    : {};
 
   const fetchNextBatch = () => {
     if (!gettingChatMessages && hasMore.current && !fetchingNextBatch.current) {
