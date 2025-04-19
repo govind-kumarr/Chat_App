@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import ChatsPanel from "./chats-panel";
 import { SocketService } from "../../socket";
@@ -11,23 +11,27 @@ import {
   setChats,
   setSocketStatus,
 } from "../../store/chat";
-import MessagePanel from "./message-panel";
-import ChatBubble from "../../components/ChatBubble";
 import Profile from "./profile-section";
+import MessagesPanelNew from "./messages-panel-new";
+import { useQuery } from "@tanstack/react-query";
+import { getChats } from "../../api/actions";
 
 const Messages = () => {
   const dispatch = useDispatch();
   const {
     user: { user },
-    chat: { activeChat, chats, activeChatMessages, showProfile },
+    chat: { activeChat, showProfile, chats },
   } = useSelector((state) => state);
+
+  const { isLoading: chatsLoading, data: chatsResponse } = useQuery({
+    queryKey: ["getChats"],
+    queryFn: getChats,
+    select: (response) => response?.data?.chats,
+    // enabled: chats?.length === 0,
+  });
 
   useEffect(() => {
     SocketService.connect();
-
-    socketEventEmitter.on("chats", (data) => {
-      dispatch(setChats(data?.chats));
-    });
 
     socketEventEmitter.on("chat-history", (data) => {
       dispatch(setChatMessages(data));
@@ -57,12 +61,20 @@ const Messages = () => {
   }, []);
 
   useEffect(() => {
-    if (activeChat) SocketService.getChatHistory(activeChat);
-  }, [activeChat]);
+    if (
+      chatsResponse &&
+      Array.isArray(chatsResponse) &&
+      chatsResponse?.length > 0
+    ) {
+      dispatch(setChats(chatsResponse));
+    }
+  }, [chatsResponse]);
 
   useEffect(() => {
-    console.log({ chats });
-    if (chats?.length > 0 && !activeChat) {
+    if (
+      chats?.length > 0 &&
+      (!activeChat || !chats?.includes((chat) => chat?.id === activeChat))
+    ) {
       const [chat] = chats.filter((c) => c?.id != user?.id);
       dispatch(setActiveChat(chat?.id));
     }
@@ -85,18 +97,11 @@ const Messages = () => {
       }}
     >
       {!showProfile && <ChatsPanel />}
-      {chats?.length > 0 &&
-        activeChat &&
-        chats?.map((chat) => {
-          return (
-            <MessagePanel
-              key={chat.id}
-              chat={chat}
-              chatMessages={chat.id === activeChat ? activeChatMessages : []}
-              show={chat.id === activeChat}
-            />
-          );
-        })}
+      {!chatsLoading &&
+        chats?.length > 0 &&
+        chats?.map((chat) => (
+          <MessagesPanelNew key={chat.id} chatId={chat.id} />
+        ))}
       {showProfile && <Profile />}
     </Sheet>
   );

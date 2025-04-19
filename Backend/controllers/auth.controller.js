@@ -40,6 +40,9 @@ const userRegister = async (req, res) => {
 const userLogin = async (req, res) => {
   try {
     const userDetails = await verifyUser(req.body);
+    if (userDetails && userDetails?.authMethod !== "email") {
+      throw new Error("Different login method");
+    }
     const session = await createSession(userDetails?._id);
     attachSession(res, session?._id);
     res.status(200).json({ message: "Login successful" });
@@ -54,21 +57,34 @@ const userLogout = async (req, res) => {
 };
 
 const googleAuthHandler = async (req, res) => {
-  const code = req.query.code;
-  // get id_token and access_token
-  const { id_token, access_token } = await getGoogleOAuthTokens({ code });
-  // Retrieve user from id_token and access_token
-  const googleUser = await getGoogleUser({ id_token, access_token });
+  try {
+    const code = req.query.code;
+    // get id_token and access_token
+    const { id_token, access_token } = await getGoogleOAuthTokens({ code });
+    // Retrieve user from id_token and access_token
+    const googleUser = await getGoogleUser({ id_token, access_token });
 
-  if (!googleUser.verified_email)
-    res.status(401).send("Email is not verified!");
+    if (!googleUser.verified_email)
+      res.status(401).send("Email is not verified!");
 
-  const userData = getUserFromGoogleRes(googleUser);
-  const user = await createUser(userData);
-  const session = await createSession(user._id);
-  attachSession(res, session?._id);
+    const userData = getUserFromGoogleRes(googleUser);
+    let user = await doUserExist(userData?.email);
+    if (user && user?.authMethod !== "google") {
+      res.redirect(`${app_url}/auth?error=email_already_registered`);
+      return;
+    }
 
-  res.redirect(app_url);
+    if (!user) {
+      user = await createUser(userData);
+    }
+
+    const session = await createSession(user.id);
+    attachSession(res, session?._id);
+    res.redirect(app_url);
+  } catch (error) {
+    console.log(`Error authenticating google user: ${error?.message}`);
+    res.redirect(`${app_url}/auth?error=server_error`);
+  }
 };
 
 const verifySession = async (req, res) => {

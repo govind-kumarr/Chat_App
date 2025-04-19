@@ -1,18 +1,45 @@
-import { Avatar, Button, Chip, IconButton, Stack, Typography } from "@mui/joy";
+import {
+  Avatar,
+  Button,
+  Chip,
+  Dropdown,
+  IconButton,
+  MenuButton,
+  Stack,
+  Typography,
+  Menu,
+  MenuItem,
+} from "@mui/joy";
 import CircleIcon from "@mui/icons-material/Circle";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import React from "react";
 import { toggleMessagesPane } from "../../utils";
 import { useDispatch, useSelector } from "react-redux";
 import { setShowProfile } from "../../store/chat";
+import MoreVert from "@mui/icons-material/MoreVert";
+import { deleteChat } from "../../api/actions";
+import useAppMutation from "../../hooks/useAppMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MessagePanelHeader = () => {
+  const queryClient = useQueryClient();
   const {
     chat: { activeChat, chats, showProfile },
   } = useSelector((state) => state);
   const dispatch = useDispatch();
+  const { isPending: deletingGroup, mutate: deleteChatMutate } = useAppMutation(
+    {
+      mutationFn: deleteChat,
+      mutationKey: "deleteChat",
+      onSuccess: () => {
+        queryClient.refetchQueries({
+          queryKey: ["getChats"],
+          exact: false,
+        });
+      },
+    }
+  );
 
   const {
     name,
@@ -101,9 +128,26 @@ const MessagePanelHeader = () => {
         >
           {showProfile ? "Hide" : "View"} profile
         </Button>
-        <IconButton size="sm" variant="plain" color="neutral">
-          <MoreVertRoundedIcon />
-        </IconButton>
+        <Dropdown>
+          <MenuButton
+            slots={{ root: IconButton }}
+            slotProps={{ root: { variant: "outlined", color: "neutral" } }}
+          >
+            <MoreVert />
+          </MenuButton>
+          <Menu placement="bottom-start">
+            {type === "group" && (
+              <MenuItem
+                onClick={() => {
+                  deleteChatMutate({ chatId: activeChat });
+                }}
+                disabled={deletingGroup}
+              >
+                Delete Group
+              </MenuItem>
+            )}
+          </Menu>
+        </Dropdown>
       </Stack>
     </Stack>
   );

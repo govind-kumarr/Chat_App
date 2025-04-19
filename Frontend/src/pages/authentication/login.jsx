@@ -22,6 +22,8 @@ import { useDispatch } from "react-redux";
 import { showSnackbar } from "../../store/snackbar";
 import GoogleIcon from "../../assets/icons";
 import useAppMutation from "../../hooks/useAppMutation";
+import { ROUTES } from "../../api/routes";
+import { getGoogleOAuthURL } from "../../utils";
 
 const defaultLoginValues = {
   email: "",
@@ -55,7 +57,6 @@ const Login = () => {
     resolver: yupResolver(loginSchema),
   });
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const { mutate: loginMutate, isPending: loginPending } = useAppMutation({
     mutationFn: loginUser,
@@ -130,6 +131,9 @@ const Login = () => {
               color="neutral"
               fullWidth
               startDecorator={<GoogleIcon />}
+              onClick={() => {
+                window.location.href = getGoogleOAuthURL();
+              }}
             >
               Continue with Google
             </Button>

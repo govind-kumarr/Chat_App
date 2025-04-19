@@ -3,7 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 const defaultSnackbarState = {
   variant: "primary",
   open: false,
-  message: "",
+  title: "",
+  description: "",
 };
 
 const snackbarSlice = createSlice({
@@ -12,7 +13,8 @@ const snackbarSlice = createSlice({
   reducers: {
     showSnackbar: (state, action) => {
       state.open = true;
-      state.message = action.payload.message || "";
+      state.title = action.payload.title || "";
+      state.description = action.payload.description || "";
       state.variant = action.payload.variant || "primary";
     },
     hideSnackbar: (state, action) => ({ ...defaultSnackbarState }),

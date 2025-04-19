@@ -28,6 +28,9 @@ const createUser = async (userData) => {
       email,
       password: hashedPassword,
     });
+    if (userData?.authMethod) {
+      newUser.authMethod = userData?.authMethod;
+    }
     await newUser.save();
     const userObject = newUser.toJSON();
     return userObject;

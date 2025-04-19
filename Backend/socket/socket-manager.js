@@ -1,3 +1,4 @@
+const { MessageModel } = require("../models/Message.modal");
 const {
   getChatHistory,
   getSocket,
@@ -5,6 +6,7 @@ const {
   findAndPopulateMessage,
   prepareChats,
   createChat,
+  getUserGroups,
 } = require("../services/chat.services");
 const { getAllUsers, changeStatus } = require("../services/user.services");
 const { toObjectId } = require("../utils");
@@ -26,9 +28,23 @@ class SocketManager {
         await changeStatus(user.id, true, socket.id);
         this.sendChats(socket.id);
         this.attachListeners();
+        this.createGroups();
       }
     } catch (error) {
       console.log(`Error initializing: ${error.message}`);
+    }
+  }
+
+  async createGroups() {
+    try {
+      const socket = this.socket;
+      const user = socket?.locals?.user;
+      if (socket && user) {
+        const groupIds = await getUserGroups(user?.id);
+        groupIds?.forEach((id) => socket.join(id));
+      }
+    } catch (error) {
+      console.log(`Error creating rooms: ${error?.message}`);
     }
   }
 
@@ -36,15 +52,7 @@ class SocketManager {
     const socket = this.socket;
     const user = socket?.locals?.user;
     const userId = user?.id;
-    this.socket.on("create-chat", async (data, cb) => {
-      try {
-        const { participants, type = "group", name, description } = data || {}; // Handle group name description here
-        const chat = await createChat(type, participants);
-        cb({ message: "Chat created successfully", chatId: chat._id });
-      } catch (error) {
-        console.error(`Error creating chat: ${error?.message}`);
-      }
-    });
+
     this.socket.on("get-chats", async (cb) => {
       console.log("userid", { userId });
       const chats = await prepareChats(userId);
@@ -58,9 +66,22 @@ class SocketManager {
       try {
         const res = await addMessage(userId, data);
         cb({ message: "Message added successfully", data: res });
-        this.sendNewMessage(res?.id);
+        this.sendNewMessage(
+          res?.id,
+          data?.type === "group" ? data?.chatId : null
+        );
       } catch (error) {
         console.log(`Error: ${error?.message}`);
+      }
+    });
+    this.socket.on("message-seen", async (data, cb) => {
+      try {
+        const { messageIds } = data;
+        if (Array.isArray(messageIds)) {
+          await markMessagesSeen(messageIds);
+        }
+      } catch (error) {
+        console.log(`Error marking messages seen: ${error?.message}`);
       }
     });
     this.socket.on("disconnecting", this.handleDisconnecting);
@@ -88,23 +109,40 @@ class SocketManager {
     console.log(`User ${user?.username} disconnected`);
   }
 
-  async sendNewMessage(messageId) {
+  async sendNewMessage(messageId, groupId) {
     const io = this.io;
+    const populatedMessage = await findAndPopulateMessage(messageId);
+
     if (messageId && io) {
-      const populatedMessage = await findAndPopulateMessage(messageId);
-      populatedMessage["sender"] = populatedMessage.senderId;
-      populatedMessage["recipient"] = populatedMessage.recipientId;
+      populatedMessage["sender"] = populatedMessage?.senderId;
       populatedMessage["senderId"] = populatedMessage?.sender?._id;
-      populatedMessage["recipientId"] = populatedMessage?.recipient?._id;
+
       if (populatedMessage.type === "media") {
         populatedMessage["fileDetails"] = populatedMessage?.file;
         populatedMessage["file"] = populatedMessage?.file?._id;
       }
-
-      const sendersSocket = populatedMessage?.sender?.socketId;
-      const recieversSocket = populatedMessage?.recipient?.socketId;
-      io.to(sendersSocket).emit("new-message", populatedMessage);
-      io.to(recieversSocket).emit("new-message", populatedMessage);
+      if (!groupId) {
+        populatedMessage["recipient"] = populatedMessage?.recipientId;
+        populatedMessage["recipientId"] = populatedMessage?.recipient?._id;
+        const sendersSocket = populatedMessage?.sender?.socketId;
+        const recieversSocket = populatedMessage?.recipient?.socketId;
+        io.to(sendersSocket).emit("new-message", populatedMessage);
+        io.to(recieversSocket).emit(
+          "new-message",
+          populatedMessage,
+          async (res) => {
+            if (res) {
+              const { status } = res;
+              if (status == "recieved") {
+                await changeMessageStatus(messageId, "delivered");
+              }
+            }
+          }
+        );
+      } else {
+        // Emit message to group
+        io.to(groupId).emit("new-message", populatedMessage);
+      }
     }
   }
 

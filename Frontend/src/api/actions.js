@@ -85,6 +85,20 @@ const getChatUsers = () => {
   });
 };
 
+const getChats = () => {
+  return apiClient({
+    url: ROUTES.GET_CHATS.URL,
+    method: ROUTES.GET_CHATS.METHOD,
+  });
+};
+const deleteChat = (data) => {
+  return apiClient({
+    url: ROUTES.DELETE_CHAT.URL,
+    method: ROUTES.DELETE_CHAT.METHOD,
+    data,
+  });
+};
+
 const getGroupMembers = (data) => {
   return apiClient({
     url: ROUTES.GROUP_MEMBERS.URL,
@@ -97,6 +111,14 @@ const createGroup = (data) => {
   return apiClient({
     url: ROUTES.CREATE_GROUP.URL,
     method: ROUTES.CREATE_GROUP.METHOD,
+    data,
+  });
+};
+
+const getChatMessages = (data) => {
+  return apiClient({
+    url: ROUTES.GET_CHAT_MESSAGES.URL,
+    method: ROUTES.GET_CHAT_MESSAGES.METHOD,
     data,
   });
 };
@@ -128,4 +150,7 @@ export {
   createGroup,
   getGroupMembers,
   deleteFile,
+  getChatMessages,
+  getChats,
+  deleteChat,
 };

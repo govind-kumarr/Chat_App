@@ -7,6 +7,10 @@ export const ROUTES = {
     URL: "/api/auth/user-login",
     METHOD: "POST",
   },
+  GOOGLE_LOGIN: {
+    URL: "/api/auth/google-auth",
+    METHOD: "GET",
+  },
   FORGOT_PASSWORD: {
     URL: "/api/auth/forgot-password",
     METHOD: "POST",
@@ -39,12 +43,24 @@ export const ROUTES = {
     URL: "/api/file/delete",
     METHOD: "POST",
   },
+  GET_CHATS: {
+    URL: "/api/chat",
+    METHOD: "GET",
+  },
+  DELETE_CHAT: {
+    URL: "/api/chat",
+    METHOD: "DELETE",
+  },
   CHAT_USERS: {
     URL: "/api/chat/users",
     METHOD: "GET",
   },
   CREATE_GROUP: {
     URL: "/api/chat/group",
+    METHOD: "POST",
+  },
+  GET_CHAT_MESSAGES: {
+    URL: "/api/chat/messages",
     METHOD: "POST",
   },
   GROUP_MEMBERS: {

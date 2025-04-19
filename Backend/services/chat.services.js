@@ -10,7 +10,7 @@ const {
 } = require("../utils");
 const { createFile } = require("./file.services");
 
-const getChatHistory = async (chatId) => {
+const getChatHistory = async (chatId, offset, limit) => {
   try {
     const chat = await MessageModel.aggregate([
       {
@@ -71,11 +71,17 @@ const getChatHistory = async (chatId) => {
       },
       {
         $sort: {
-          createdAt: 1,
+          createdAt: -1,
         },
       },
+      {
+        $skip: offset,
+      },
+      {
+        $limit: limit,
+      },
     ]);
-    return chat;
+    return chat?.reverse();
   } catch (error) {
     console.error(`Error getting chat history: ${error?.message}`);
   }
@@ -83,7 +89,15 @@ const getChatHistory = async (chatId) => {
 
 const createChat = async (type, participants) => {
   try {
-    if (participants?.length > 2) {
+    if (type === "personal" && participants?.length === 2) {
+      const chat = new ChatModel({
+        type,
+        participants,
+      });
+      await chat.save();
+      return chat;
+    }
+    if (type === "group" && participants?.length >= 2) {
       const chat = new ChatModel({
         type,
         participants,
@@ -199,6 +213,25 @@ const addMessage = async (senderId, data) => {
     await message.save();
     return { id: message?._id };
   }
+};
+
+const changeMessageStatus = async (messageId, status) => {
+  try {
+    const message = await MessageModel.findById(messageId);
+    if (message) {
+      message.status = status;
+      message.save();
+    }
+  } catch (error) {
+    console.error(`Error changing status of message: ${error?.message}`);
+  }
+};
+
+const markMessagesSeen = async (messageIds = []) => {
+  await MessageModel.updateMany(
+    { _id: { $in: messageIds.map((id) => toObjectId(id)) } },
+    { status: "seen" }
+  );
 };
 
 const getSocket = async (id = "") => {
@@ -341,6 +374,7 @@ const prepareChats = async (userId) => {
           lastMessageContent: {
             $ifNull: ["$lastMessage.content", null],
           },
+          participants: 1,
         },
       },
       {
@@ -349,6 +383,8 @@ const prepareChats = async (userId) => {
         },
       },
     ]);
+
+    // Find group participant
 
     const finalResult = chats.concat(groups).sort((a, b) => {
       const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
@@ -361,6 +397,47 @@ const prepareChats = async (userId) => {
   }
 };
 
+const getUserGroups = async (userId) => {
+  const [response] = await ChatModel.aggregate([
+    {
+      $match: {
+        participants: { $in: [toObjectId(userId)] },
+        type: "group",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        groupIds: {
+          $push: { $toString: "$_id" },
+        },
+      },
+    },
+  ]);
+  return response?.groupIds || [];
+};
+
+const isGroupAdmin = async (chatId, userId) => {
+  try {
+    const chat = await ChatModel.findById(chatId);
+    if (chat) {
+      return chat.admin[0].equals(toObjectId(userId)) ? chat : false;
+    }
+    return false;
+  } catch (error) {
+    console.log(`Error checking chat admin: ${error?.message}`);
+  }
+};
+
+const doChatExist = async (chatId) => {
+  try {
+    const chat = await ChatModel.findById(chatId);
+    return chat;
+  } catch (error) {
+    console.log(`Error checking chat exist: ${error?.message}`);
+  }
+};
+
 module.exports = {
   getChatHistory,
   getSocket,
@@ -369,4 +446,9 @@ module.exports = {
   createChat,
   findChat,
   prepareChats,
+  changeMessageStatus,
+  markMessagesSeen,
+  getUserGroups,
+  isGroupAdmin,
+  doChatExist,
 };

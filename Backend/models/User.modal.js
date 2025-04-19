@@ -54,6 +54,11 @@ const UserSchema = new mongoose.Schema(
       default: Date.now,
       required: false,
     },
+    authMethod: {
+      type: String,
+      enum: ['google', 'meta', 'email'],
+      default: 'email'
+    },
   },
   { timestamps: true }
 );

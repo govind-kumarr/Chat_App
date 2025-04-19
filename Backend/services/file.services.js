@@ -32,6 +32,12 @@ const updateUploadStatus = async (fileId) => {
       await file?.save();
 
       if (file.type === "avatar" && user) {
+        // delete if there is already existed avatar from S3 and files collections
+        if (user?.avatar?.key) {
+          await FileModel.deleteOne({ storageKey: url.avatar.key });
+          await aws.deleteFile(url.avatar.key);
+          console.log(`Successfully deleted prev avatar`);
+        }
         user.avatar = {
           key: file.storageKey,
           url: file.url,
