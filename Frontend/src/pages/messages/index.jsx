@@ -10,6 +10,7 @@ import {
   setChatMessages,
   setChats,
   setSocketStatus,
+  setUnreadMessage,
 } from "../../store/chat";
 import Profile from "./profile-section";
 import MessagesPanelNew from "./messages-panel-new";
@@ -39,6 +40,11 @@ const Messages = () => {
 
     socketEventEmitter.on("new-message", (data) => {
       dispatch(pushMessage(data));
+    });
+
+    socketEventEmitter.on("message-notification", (data) => {
+      const { unreadMessages, chatId } = data;
+      dispatch(setUnreadMessage({ chatId, unreadMessages }));
     });
 
     socketEventEmitter.on("connect", (data) => {

@@ -168,6 +168,11 @@ const addMessage = async (senderId, data) => {
     message.chatId = chatId;
     const chat = await ChatModel.findById(chatId);
     chat.lastMessage = message?._id;
+    if (type === "personal") {
+      message.recipientId = chat.participants.find(
+        (participantId) => !participantId.equals(senderId)
+      );
+    }
     await chat.save();
   } else {
     if (type === "user" && recipientId) {
@@ -438,6 +443,13 @@ const doChatExist = async (chatId) => {
   }
 };
 
+const getUnreadCountOfChat = async (chatId) => {
+  return MessageModel.find({
+    chatId: toObjectId(chatId),
+    status: { $ne: "seen" },
+  }).count();
+};
+
 module.exports = {
   getChatHistory,
   getSocket,
@@ -451,4 +463,5 @@ module.exports = {
   getUserGroups,
   isGroupAdmin,
   doChatExist,
+  getUnreadCountOfChat,
 };

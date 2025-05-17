@@ -7,6 +7,7 @@ const {
   prepareChats,
   createChat,
   getUserGroups,
+  getUnreadCountOfChat,
 } = require("../services/chat.services");
 const { getAllUsers, changeStatus } = require("../services/user.services");
 const { toObjectId } = require("../utils");
@@ -129,16 +130,17 @@ class SocketManager {
         io.to(sendersSocket).emit("new-message", populatedMessage);
         io.to(recieversSocket).emit(
           "new-message",
-          populatedMessage,
-          async (res) => {
-            if (res) {
-              const { status } = res;
-              if (status == "recieved") {
-                await changeMessageStatus(messageId, "delivered");
-              }
-            }
-          }
+          populatedMessage
+          // async (res) => {
+          //   if (res) {
+          //     const { status } = res;
+          //     if (status == "recieved") {
+          //       await changeMessageStatus(messageId, "delivered");
+          //     }
+          //   }
+          // }
         );
+        await this.sendMessageNotification(populatedMessage?.chatId, recieversSocket)
       } else {
         // Emit message to group
         io.to(groupId).emit("new-message", populatedMessage);
@@ -152,6 +154,16 @@ class SocketManager {
     const userId = user.id;
     const chats = await prepareChats(userId);
     if (socketId) io.to(socketId).emit("chats", { chats });
+  }
+
+  async sendMessageNotification(chatId, socketId) {
+    try {
+      const io = this.io;
+      const unreadMessages = await getUnreadCountOfChat(chatId);
+      io.to(socketId).emit("message-notification", { unreadMessages, chatId });
+    } catch (error) {
+      console.error(`Error sending message notifications: ${error?.message}`)
+    }
   }
 
   async sendChatHistory(senderId, recipientId) {

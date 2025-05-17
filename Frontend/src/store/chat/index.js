@@ -6,6 +6,7 @@ const defaultState = {
   activeChatMessages: [],
   socketStatus: "connecting",
   showProfile: false,
+  unreadCount: {},
 };
 
 const chatSlice = createSlice({
@@ -33,6 +34,12 @@ const chatSlice = createSlice({
         action.payload,
       ];
     },
+    setUnreadMessage: (state, action) => {
+      const { chatId, unreadMessages } = action.payload;
+      state.unreadCount[chatId] = {
+        unreadMessages,
+      };
+    },
   },
 });
 
@@ -43,6 +50,7 @@ export const {
   pushMessage,
   setSocketStatus,
   setShowProfile,
+  setUnreadMessage
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

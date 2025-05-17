@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   isValidIsoString,
   timeConversions,
@@ -15,11 +15,12 @@ import {
 import AvatarWithStatus from "../../components/AvatarWithStatus";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveChat } from "../../store/chat";
+import { socketEventEmitter } from "../../socket/emiitter";
 
 const UserListItem = ({ user }) => {
   const dispatch = useDispatch();
   const {
-    chat: { activeChat },
+    chat: { activeChat, unreadCount },
   } = useSelector((state) => state);
 
   const {
@@ -51,9 +52,9 @@ const UserListItem = ({ user }) => {
               {/* <Typography level="body-sm">{email}</Typography> */}
             </Box>
             <Box sx={{ lineHeight: 1.5, textAlign: "right" }}>
-              {/* {messages[0].unread && (
+              {unreadCount[id] && unreadCount[id]?.unreadMessages > 0 && (
                 <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-              )} */}
+              )}
               <Typography
                 level="body-xs"
                 noWrap

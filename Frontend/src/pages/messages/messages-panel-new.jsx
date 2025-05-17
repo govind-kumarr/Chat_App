@@ -1,6 +1,14 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Box, Divider, Sheet, Stack, Typography } from "@mui/joy";
+import {
+  Box,
+  Button,
+  Divider,
+  Sheet,
+  Snackbar,
+  Stack,
+  Typography,
+} from "@mui/joy";
 import { useSelector } from "react-redux";
 
 import MessagesPaneHeader from "./message-panel-header";
@@ -110,6 +118,17 @@ const MessagesPanelNew = ({ chatId }) => {
     >
       <>
         <MessagesPaneHeader />
+        {gettingChatMessages && (
+          <Stack
+            alignItems={"center"}
+            justifyContent={"center"}
+            direction={"row"}
+          >
+            <Button loading={true}></Button>
+            <Typography>Loding messages</Typography>
+          </Stack>
+        )}
+
         <Box
           sx={{
             display: "flex",

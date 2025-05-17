@@ -13,6 +13,7 @@ import {
   Stack,
   Typography,
 } from "@mui/joy";
+import CircleIcon from "@mui/icons-material/Circle";
 import AvatarWithStatus from "../../components/AvatarWithStatus";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveChat } from "../../store/chat";
@@ -33,7 +34,7 @@ const ChatListItem = ({ chat }) => {
     lastMessageContent = "",
   } = chat || {};
   const {
-    chat: { activeChat },
+    chat: { activeChat, unreadCount },
   } = useSelector((state) => state);
 
   return (
@@ -63,9 +64,9 @@ const ChatListItem = ({ chat }) => {
               </Typography>
             </Box>
             <Box sx={{ lineHeight: 1.5, textAlign: "right" }}>
-              {/* {messages[0].unread && (
-            <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-          )} */}
+              {unreadCount[id] && unreadCount[id]?.unreadMessages > 0 && (
+                <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+              )}
               <Typography
                 level="body-xs"
                 noWrap
